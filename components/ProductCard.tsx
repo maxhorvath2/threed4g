@@ -14,7 +14,7 @@ interface ProductCardProps {
 	variant?: "default" | "featured";
 }
 
-export default function ProductCard({ product, variant = "default" }: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
 	return (
 		<div className="group relative overflow-hidden rounded-lg border border-[#262626] bg-[#111111] hover:border-[#22c55e]/50 transition-all duration-200">
 			<div className="aspect-square relative overflow-hidden bg-[#1a1a1a]">

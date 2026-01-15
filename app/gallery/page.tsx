@@ -1,7 +1,16 @@
 import Navigation from "@/components/Navigation";
 import ProductCard from "@/components/ProductCard";
 
-async function getAllProducts() {
+interface Product {
+	id: number;
+	name: string;
+	description: string | null;
+	image_url: string;
+	category: string | null;
+	featured: boolean;
+}
+
+async function getAllProducts(): Promise<Product[]> {
 	try {
 		const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products`, {
 			cache: "no-store",
@@ -36,7 +45,7 @@ export default async function Gallery() {
 					</div>
 				) : (
 					<div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-						{products.map((product: any) => (
+						{products.map((product) => (
 							<ProductCard key={product.id} product={product} />
 						))}
 					</div>

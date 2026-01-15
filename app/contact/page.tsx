@@ -61,7 +61,7 @@ export default function Contact() {
 							<h3 className="text-lg font-semibold text-[#fafafa] mb-4">Custom Orders</h3>
 							<p className="text-[#a3a3a3] text-sm leading-relaxed">
 								Need something specific for your setup? We love working on custom projects. Describe your requirements and
-								we'll work together to create the perfect solution.
+								we&apos;ll work together to create the perfect solution.
 							</p>
 						</div>
 					</div>
@@ -69,7 +69,7 @@ export default function Contact() {
 
 				<div className="border-t border-[#262626] pt-12 text-center">
 					<p className="text-[#a3a3a3]">
-						Thank you for visiting ThreeD4G. We're passionate about helping growers optimize their setups with quality 3D
+						Thank you for visiting ThreeD4G. We&apos;re passionate about helping growers optimize their setups with quality 3D
 						printed accessories.
 					</p>
 				</div>

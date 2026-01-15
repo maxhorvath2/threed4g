@@ -2,7 +2,16 @@ import Navigation from "@/components/Navigation";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 
-async function getFeaturedProducts() {
+interface Product {
+	id: number;
+	name: string;
+	description: string | null;
+	image_url: string;
+	category: string | null;
+	featured: boolean;
+}
+
+async function getFeaturedProducts(): Promise<Product[]> {
 	try {
 		const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products?featured=true`, {
 			cache: "no-store",
@@ -95,7 +104,7 @@ export default async function Home() {
 						</div>
 
 						<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-							{featuredProducts.slice(0, 6).map((product: any) => (
+							{featuredProducts.slice(0, 6).map((product) => (
 								<ProductCard key={product.id} product={product} />
 							))}
 						</div>
