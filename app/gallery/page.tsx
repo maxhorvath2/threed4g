@@ -1,5 +1,8 @@
 import Navigation from "@/components/Navigation";
 import ProductCard from "@/components/ProductCard";
+import { sql } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 
 interface Product {
 	id: number;
@@ -12,11 +15,11 @@ interface Product {
 
 async function getAllProducts(): Promise<Product[]> {
 	try {
-		const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products`, {
-			cache: "no-store",
-		});
-		if (!res.ok) return [];
-		return res.json();
+		const products = await sql`
+			SELECT * FROM products
+			ORDER BY created_at DESC
+		`;
+		return products as Product[];
 	} catch (error) {
 		console.error("Error fetching products:", error);
 		return [];

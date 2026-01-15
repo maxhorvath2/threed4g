@@ -1,6 +1,9 @@
 import Navigation from "@/components/Navigation";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
+import { sql } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 
 interface Product {
 	id: number;
@@ -13,11 +16,12 @@ interface Product {
 
 async function getFeaturedProducts(): Promise<Product[]> {
 	try {
-		const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products?featured=true`, {
-			cache: "no-store",
-		});
-		if (!res.ok) return [];
-		return res.json();
+		const products = await sql`
+			SELECT * FROM products
+			WHERE featured = true
+			ORDER BY created_at DESC
+		`;
+		return products as Product[];
 	} catch (error) {
 		console.error("Error fetching featured products:", error);
 		return [];
