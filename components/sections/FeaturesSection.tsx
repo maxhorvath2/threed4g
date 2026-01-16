@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { gsap, ScrollTrigger } from "@/lib/gsap";
+import { gsap } from "@/lib/gsap";
 import { Card } from "@/components/ui/Card";
 
 const features = [
@@ -101,41 +101,27 @@ export function FeaturesSection() {
 	}, []);
 
 	return (
-		<section
-			ref={sectionRef}
-			className="relative py-32 overflow-hidden"
-		>
+		<section ref={sectionRef} className="relative py-32 overflow-hidden">
 			{/* Background accent */}
-			<div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#171717] to-transparent" />
+			<div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#171717] to-transparent" />
 
 			<div className="max-w-7xl mx-auto px-6">
 				{/* Section Header */}
 				<div className="features-heading text-center max-w-3xl mx-auto mb-20">
-					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">
-						Why Choose Us
-					</span>
+					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">Why Choose Us</span>
 					<h2 className="text-headline text-[#fafafa] mb-6">
-						Engineered for{" "}
-						<span className="text-[#22c55e]">Excellence</span>
+						Engineered for <span className="text-[#22c55e]">Excellence</span>
 					</h2>
 					<p className="text-lg text-[#a3a3a3] leading-relaxed">
-						We combine cutting-edge 3D printing technology with deep
-						understanding of grow tent environments to deliver products that
-						actually work.
+						We combine cutting-edge 3D printing technology with deep understanding of grow tent environments to deliver products
+						that actually work.
 					</p>
 				</div>
 
 				{/* Feature Cards */}
-				<div
-					ref={cardsRef}
-					className="grid md:grid-cols-3 gap-6 lg:gap-8"
-				>
+				<div ref={cardsRef} className="grid md:grid-cols-3 gap-6 lg:gap-8">
 					{features.map((feature, index) => (
-						<Card
-							key={index}
-							variant="interactive"
-							className="p-8 group"
-						>
+						<Card key={index} variant="interactive" className="p-8 group">
 							{/* Icon */}
 							<div className="w-14 h-14 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center text-[#22c55e] mb-6 group-hover:bg-[#22c55e]/20 group-hover:scale-110 transition-all duration-300">
 								{feature.icon}
@@ -145,12 +131,10 @@ export function FeaturesSection() {
 							<h3 className="text-xl font-semibold text-[#fafafa] mb-3 group-hover:text-[#22c55e] transition-colors duration-300">
 								{feature.title}
 							</h3>
-							<p className="text-[#a3a3a3] leading-relaxed">
-								{feature.description}
-							</p>
+							<p className="text-[#a3a3a3] leading-relaxed">{feature.description}</p>
 
 							{/* Decorative line */}
-							<div className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#22c55e]/0 to-transparent group-hover:via-[#22c55e]/50 transition-all duration-500" />
+							<div className="absolute bottom-0 left-8 right-8 h-px bg-linear-to-r from-transparent via-[#22c55e]/0 to-transparent group-hover:via-[#22c55e]/50 transition-all duration-500" />
 						</Card>
 					))}
 				</div>

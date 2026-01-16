@@ -97,6 +97,8 @@ export function Footer() {
 										href={item.href}
 										className="p-2 text-[#737373] hover:text-[#22c55e] transition-colors duration-300"
 										aria-label={item.name}
+										target="_blank"
+										rel="noopener noreferrer"
 									>
 										{item.icon}
 									</a>

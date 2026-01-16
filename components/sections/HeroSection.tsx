@@ -31,14 +31,13 @@ export function HeroSection() {
 				const words = titleRef.current.querySelectorAll(".word");
 				gsap.set(words, { y: 100, opacity: 0 });
 
-				tl.to(titleRef.current, { opacity: 1, y: 0, duration: 0 })
-					.to(words, {
-						y: 0,
-						opacity: 1,
-						duration: 1,
-						stagger: 0.08,
-						ease: "power4.out",
-					});
+				tl.to(titleRef.current, { opacity: 1, y: 0, duration: 0 }).to(words, {
+					y: 0,
+					opacity: 1,
+					duration: 1,
+					stagger: 0.08,
+					ease: "power4.out",
+				});
 			}
 
 			// Animate subtitle
@@ -136,10 +135,7 @@ export function HeroSection() {
 	const titleWords = ["Precision", "Engineered", "Grow", "Accessories"];
 
 	return (
-		<section
-			ref={sectionRef}
-			className="relative min-h-screen flex items-center justify-center overflow-hidden"
-		>
+		<section ref={sectionRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
 			{/* Background gradient orbs */}
 			<div
 				ref={orb1Ref}
@@ -169,59 +165,33 @@ export function HeroSection() {
 				{/* Eyebrow */}
 				<div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#22c55e]/20 bg-[#22c55e]/5 mb-8 animate-fade-in">
 					<span className="w-2 h-2 rounded-full bg-[#22c55e] animate-pulse" />
-					<span className="text-sm text-[#22c55e] font-medium">
-						Premium 3D Printed Products
-					</span>
+					<span className="text-sm text-[#22c55e] font-medium">Premium 3D Printed Products</span>
 				</div>
 
 				{/* Title */}
-				<h1
-					ref={titleRef}
-					className="text-hero mb-8 text-[#fafafa] font-display"
-				>
+				<h1 ref={titleRef} className="text-hero mb-8 text-[#fafafa] font-display">
 					{titleWords.map((word, index) => (
 						<span key={index} className="inline-block overflow-visible mr-[0.3em]">
 							<span className="word inline-block">
-								{word === "Grow" ? (
-									<span className="text-[#22c55e]">{word}</span>
-								) : (
-									word
-								)}
+								{word === "Grow" ? <span className="text-[#22c55e]">{word}</span> : word}
 							</span>
 						</span>
 					))}
 				</h1>
 
 				{/* Subtitle */}
-				<p
-					ref={subtitleRef}
-					className="text-subheadline text-[#a3a3a3] max-w-2xl mx-auto mb-12 leading-relaxed"
-				>
-					Elevate your growing experience with meticulously designed,
-					high-quality 3D printed accessories built to last.
+				<p ref={subtitleRef} className="text-subheadline text-[#a3a3a3] max-w-2xl mx-auto mb-12 leading-relaxed">
+					Elevate your growing experience with meticulously designed, high-quality 3D printed accessories built to last.
 				</p>
 
 				{/* Buttons */}
-				<div
-					ref={buttonsRef}
-					className="flex flex-col sm:flex-row gap-4 justify-center"
-				>
+				<div ref={buttonsRef} className="flex flex-col sm:flex-row gap-4 justify-center">
 					<MagneticButton strength={0.15}>
 						<Button asChild size="lg">
 							<Link href="/gallery">
 								Explore Products
-								<svg
-									className="w-5 h-5"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M17 8l4 4m0 0l-4 4m4-4H3"
-									/>
+								<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
 								</svg>
 							</Link>
 						</Button>
@@ -233,19 +203,16 @@ export function HeroSection() {
 						</Button>
 					</MagneticButton>
 				</div>
-
 			</div>
 
 			{/* Scroll indicator - positioned outside content div */}
 			<div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in stagger-5 z-20">
-				<span className="text-xs text-[#737373] uppercase tracking-widest">
-					Scroll
-				</span>
-				<div className="w-px h-12 bg-gradient-to-b from-[#22c55e] to-transparent" />
+				<span className="text-xs text-[#737373] uppercase tracking-widest">Scroll</span>
+				<div className="w-px h-12 bg-linear-to-b from-[#22c55e] to-transparent" />
 			</div>
 
 			{/* Bottom gradient fade */}
-			<div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#050505] to-transparent pointer-events-none" />
+			<div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-[#050505] to-transparent pointer-events-none" />
 		</section>
 	);
 }
