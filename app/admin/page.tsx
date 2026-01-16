@@ -11,6 +11,7 @@ interface Product {
 	image_url: string;
 	category: string | null;
 	featured: boolean;
+	price: number | null;
 }
 
 interface Admin {
@@ -37,6 +38,7 @@ export default function AdminDashboard() {
 	const [productCategory, setProductCategory] = useState("");
 	const [productImageUrl, setProductImageUrl] = useState("");
 	const [productFeatured, setProductFeatured] = useState(false);
+	const [productPrice, setProductPrice] = useState("");
 
 	// Admin form state
 	const [adminUsername, setAdminUsername] = useState("");
@@ -130,6 +132,7 @@ export default function AdminDashboard() {
 					image_url: productImageUrl,
 					category: productCategory || null,
 					featured: productFeatured,
+					price: productPrice ? parseFloat(productPrice) : null,
 				}),
 			});
 
@@ -204,6 +207,7 @@ export default function AdminDashboard() {
 		setProductCategory(product.category || "");
 		setProductImageUrl(product.image_url);
 		setProductFeatured(product.featured);
+		setProductPrice(product.price !== null ? product.price.toString() : "");
 		setShowProductForm(true);
 	};
 
@@ -214,6 +218,7 @@ export default function AdminDashboard() {
 		setProductCategory("");
 		setProductImageUrl("");
 		setProductFeatured(false);
+		setProductPrice("");
 		setUploadError(null);
 		setShowProductForm(false);
 	};
@@ -313,6 +318,7 @@ export default function AdminDashboard() {
 										/>
 									</div>
 
+									<div className="grid grid-cols-2 gap-4">
 									<div>
 										<label className="block text-sm font-medium text-[#fafafa] mb-2">Category</label>
 										<input
@@ -321,6 +327,20 @@ export default function AdminDashboard() {
 											onChange={(e) => setProductCategory(e.target.value)}
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
 										/>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-[#fafafa] mb-2">Price ($)</label>
+										<input
+											type="number"
+											step="0.01"
+											min="0"
+											value={productPrice}
+											onChange={(e) => setProductPrice(e.target.value)}
+											placeholder="0.00"
+											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
+										/>
+									</div>
 									</div>
 
 									<div>
@@ -395,20 +415,32 @@ export default function AdminDashboard() {
 										<Image src={product.image_url} alt={product.name} fill className="object-cover" />
 									</div>
 									<div className="p-4">
-										<h3 className="text-lg font-semibold text-[#fafafa] mb-2">{product.name}</h3>
+										<div className="flex justify-between items-start mb-2">
+											<h3 className="text-lg font-semibold text-[#fafafa]">{product.name}</h3>
+											{product.price !== null && (
+												<span className="text-[#22c55e] font-bold">${Number(product.price).toFixed(2)}</span>
+											)}
+										</div>
 										{product.description && (
 											<p className="text-[#a3a3a3] text-sm mb-2 line-clamp-2">{product.description}</p>
 										)}
+										<div className="flex flex-wrap gap-2 mb-2">
 										{product.category && (
-											<span className="inline-block mb-2 px-2 py-1 text-xs bg-[#1a1a1a] text-[#22c55e] rounded border border-[#262626]">
+											<span className="inline-block px-2 py-1 text-xs bg-[#1a1a1a] text-[#22c55e] rounded border border-[#262626]">
 												{product.category}
 											</span>
 										)}
 										{product.featured && (
-											<span className="ml-2 px-2 py-1 text-xs bg-[#1a1a1a] text-[#22c55e] rounded border border-[#262626]">
+											<span className="px-2 py-1 text-xs bg-[#1a1a1a] text-[#22c55e] rounded border border-[#262626]">
 												Featured
 											</span>
 										)}
+										{product.price === null && (
+											<span className="px-2 py-1 text-xs bg-[#7f1d1d]/20 text-[#fca5a5] rounded border border-[#7f1d1d]">
+												No Price
+											</span>
+										)}
+										</div>
 										<div className="flex gap-2 mt-4">
 											<button
 												onClick={() => handleEditProduct(product)}

@@ -30,16 +30,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 		}
 
 		const { id } = await params;
-		const { name, description, image_url, category, featured } = await request.json();
+		const { name, description, image_url, category, featured, price } = await request.json();
 
 		const result = await sql`
-      UPDATE products 
-      SET 
+      UPDATE products
+      SET
         name = COALESCE(${name}, name),
         description = COALESCE(${description}, description),
         image_url = COALESCE(${image_url}, image_url),
         category = COALESCE(${category}, category),
         featured = COALESCE(${featured}, featured),
+        price = ${price},
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${id}
       RETURNING *

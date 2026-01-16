@@ -1,21 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { SmoothScrollProvider } from "@/components/animations/SmoothScroll";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
-const geistSans = Geist({
-	variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+	variable: "--font-display",
 	subsets: ["latin"],
+	weight: ["300", "400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
+const inter = Inter({
+	variable: "--font-body",
 	subsets: ["latin"],
+	weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-	title: "ThreeD4G",
-	description: "3D Printed Accessories for Grow Tents",
+	title: "ThreeD4G | Premium 3D Printed Grow Accessories",
+	description: "Precision-engineered 3D printed accessories for grow tents. Elevate your growing experience with innovative, high-quality products.",
 };
 
 export default function RootLayout({
@@ -25,8 +29,18 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<Analytics />
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+			<body className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}>
+				<SmoothScrollProvider>
+					{/* Grain overlay for premium texture */}
+					<div className="grain" aria-hidden="true" />
+
+					{children}
+
+					{/* Cart drawer - portal renders here */}
+					<CartDrawer />
+				</SmoothScrollProvider>
+				<Analytics />
+			</body>
 		</html>
 	);
 }

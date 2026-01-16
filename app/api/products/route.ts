@@ -38,15 +38,15 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const { name, description, image_url, category, featured } = await request.json();
+		const { name, description, image_url, category, featured, price } = await request.json();
 
 		if (!name || !image_url) {
 			return NextResponse.json({ error: "Name and image_url are required" }, { status: 400 });
 		}
 
 		const result = await sql`
-      INSERT INTO products (name, description, image_url, category, featured)
-      VALUES (${name}, ${description || null}, ${image_url}, ${category || null}, ${featured || false})
+      INSERT INTO products (name, description, image_url, category, featured, price)
+      VALUES (${name}, ${description || null}, ${image_url}, ${category || null}, ${featured || false}, ${price || null})
       RETURNING *
     `;
 
