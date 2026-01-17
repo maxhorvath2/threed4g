@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { gsap } from "gsap";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { Badge } from "@/components/ui/Badge";
@@ -93,51 +94,54 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 			/>
 
 			{/* Image container */}
-			<div ref={imageRef} className="aspect-square relative overflow-hidden bg-[#0f0f0f]">
-				<Image
-					src={product.image_url}
-					alt={product.name}
-					fill
-					className={`object-cover transition-transform duration-500 ${isHovered ? "scale-110" : "scale-100"}`}
-					sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-				/>
-
-				{/* Overlay gradient */}
-				<div
-					className={`absolute inset-0 bg-linear-to-t from-[#050505] via-transparent to-transparent transition-opacity duration-300 ${
-						isHovered ? "opacity-80" : "opacity-0"
-					}`}
-				/>
-
-				{/* Quick add button - appears on hover */}
-				<div
-					className={`absolute bottom-4 left-4 right-4 transition-all duration-300 ${
-						isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-					}`}
-				>
-					<AddToCartButton
-						product={{
-							id: product.id,
-							name: product.name,
-							price: product.price ?? null,
-							image_url: product.image_url,
-						}}
-						size="sm"
-						className="w-full backdrop-blur-sm"
-						showPrice={false}
+			<Link href={`/product/${product.id}`} className="block">
+				<div ref={imageRef} className="aspect-square relative overflow-hidden bg-[#0f0f0f]">
+					<Image
+						src={product.image_url}
+						alt={product.name}
+						fill
+						className={`object-cover transition-transform duration-500 ${isHovered ? "scale-110" : "scale-100"}`}
+						sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
 					/>
-				</div>
 
-				{/* Featured badge */}
-				{product.featured && variant === "featured" && (
-					<div className="absolute top-4 left-4">
-						<Badge variant="primary">Featured</Badge>
+					{/* Overlay gradient */}
+					<div
+						className={`absolute inset-0 bg-linear-to-t from-[#050505] via-transparent to-transparent transition-opacity duration-300 ${
+							isHovered ? "opacity-80" : "opacity-0"
+						}`}
+					/>
+
+					{/* Featured badge */}
+					{product.featured && variant === "featured" && (
+						<div className="absolute top-4 left-4">
+							<Badge variant="primary">Featured</Badge>
+						</div>
+					)}
+
+					{/* Quick add button - appears on hover */}
+					<div
+						className={`absolute bottom-4 left-4 right-4 transition-all duration-300 z-20 ${
+							isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+						}`}
+						onClick={(e) => e.preventDefault()}
+					>
+						<AddToCartButton
+							product={{
+								id: product.id,
+								name: product.name,
+								price: product.price ?? null,
+								image_url: product.image_url,
+							}}
+							size="sm"
+							className="w-full backdrop-blur-sm"
+							showPrice={false}
+						/>
 					</div>
-				)}
-			</div>
+				</div>
+			</Link>
 
 			{/* Content */}
-			<div className="p-5">
+			<Link href={`/product/${product.id}`} className="block p-5">
 				<div className="flex items-start justify-between gap-3 mb-2">
 					<h3 className="text-base font-semibold text-[#fafafa] line-clamp-1 group-hover:text-[#22c55e] transition-colors duration-300">
 						{product.name}
@@ -152,7 +156,7 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 						{product.category}
 					</Badge>
 				)}
-			</div>
+			</Link>
 
 			{/* Bottom border glow on hover */}
 			<div
