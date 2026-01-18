@@ -2,11 +2,24 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export interface CartItem {
-	id: number;
+	id: string; // Composite key: "productId" or "productId-variantId"
+	productId: number;
+	variantId: number | null;
+	variantName: string | null;
 	name: string;
 	price: number;
 	image_url: string;
 	quantity: number;
+}
+
+// Input type for adding items to cart
+export interface AddToCartInput {
+	productId: number;
+	variantId?: number | null;
+	variantName?: string | null;
+	name: string;
+	price: number;
+	image_url: string;
 }
 
 interface CartStore {
@@ -14,9 +27,9 @@ interface CartStore {
 	isOpen: boolean;
 
 	// Actions
-	addItem: (product: Omit<CartItem, "quantity">) => void;
-	removeItem: (id: number) => void;
-	updateQuantity: (id: number, quantity: number) => void;
+	addItem: (product: AddToCartInput) => void;
+	removeItem: (id: string) => void;
+	updateQuantity: (id: string, quantity: number) => void;
 	clearCart: () => void;
 	toggleCart: () => void;
 	openCart: () => void;
@@ -27,6 +40,11 @@ interface CartStore {
 	getTotal: () => number;
 }
 
+// Generate cart item ID from product and variant
+function getCartItemId(productId: number, variantId?: number | null): string {
+	return variantId ? `${productId}-${variantId}` : `${productId}`;
+}
+
 export const useCartStore = create<CartStore>()(
 	persist(
 		(set, get) => ({
@@ -35,19 +53,32 @@ export const useCartStore = create<CartStore>()(
 
 			addItem: (product) => {
 				const items = get().items;
-				const existingItem = items.find((item) => item.id === product.id);
+				const cartItemId = getCartItemId(product.productId, product.variantId);
+				const existingItem = items.find((item) => item.id === cartItemId);
 
 				if (existingItem) {
 					set({
 						items: items.map((item) =>
-							item.id === product.id
+							item.id === cartItemId
 								? { ...item, quantity: item.quantity + 1 }
 								: item
 						),
 					});
 				} else {
 					set({
-						items: [...items, { ...product, quantity: 1 }],
+						items: [
+							...items,
+							{
+								id: cartItemId,
+								productId: product.productId,
+								variantId: product.variantId ?? null,
+								variantName: product.variantName ?? null,
+								name: product.name,
+								price: product.price,
+								image_url: product.image_url,
+								quantity: 1,
+							},
+						],
 					});
 				}
 

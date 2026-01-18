@@ -12,26 +12,39 @@ interface AddToCartButtonProps extends Omit<ButtonProps, "onClick"> {
 		price: number | null;
 		image_url: string;
 	};
+	selectedVariant?: {
+		id: number;
+		name: string;
+		price: number;
+	};
 	showPrice?: boolean;
 }
 
 export function AddToCartButton({
 	product,
+	selectedVariant,
 	showPrice = true,
 	className,
 	size = "md",
+	variant,
+	disabled,
 	...props
 }: AddToCartButtonProps) {
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const addItem = useCartStore((state) => state.addItem);
 
+	// Use variant price if available, otherwise product price
+	const price = selectedVariant?.price ?? product.price;
+
 	const handleClick = () => {
-		if (!product.price) return;
+		if (price === null || price === undefined) return;
 
 		addItem({
-			id: product.id,
+			productId: product.id,
+			variantId: selectedVariant?.id ?? null,
+			variantName: selectedVariant?.name ?? null,
 			name: product.name,
-			price: Number(product.price),
+			price: Number(price),
 			image_url: product.image_url,
 		});
 
@@ -51,7 +64,8 @@ export function AddToCartButton({
 		}
 	};
 
-	const hasPrice = product.price !== null && product.price !== undefined;
+	const hasPrice = price !== null && price !== undefined;
+	const isDisabled = disabled || !hasPrice;
 
 	return (
 		<Button
@@ -59,7 +73,8 @@ export function AddToCartButton({
 			onClick={handleClick}
 			className={className}
 			size={size}
-			disabled={!hasPrice}
+			variant={variant}
+			disabled={isDisabled}
 			{...props}
 		>
 			{hasPrice ? (
@@ -77,7 +92,7 @@ export function AddToCartButton({
 							d="M12 6v6m0 0v6m0-6h6m-6 0H6"
 						/>
 					</svg>
-					{showPrice ? `Add to Cart - $${Number(product.price).toFixed(2)}` : "Add to Cart"}
+					{showPrice ? `Add to Cart - $${Number(price).toFixed(2)}` : "Add to Cart"}
 				</>
 			) : (
 				"Price Coming Soon"

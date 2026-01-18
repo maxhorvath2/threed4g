@@ -3,19 +3,10 @@
 import { useRef, useEffect, useState, useMemo } from "react";
 import { gsap } from "@/lib/gsap";
 import ProductCard from "@/components/ProductCard";
-
-interface Product {
-  id: number;
-  name: string;
-  description: string | null;
-  image_url: string;
-  category: string | null;
-  featured: boolean;
-  price: number | null;
-}
+import type { ProductWithDetails } from "@/lib/types/product";
 
 interface GalleryContentProps {
-  products: Product[];
+  products: ProductWithDetails[];
 }
 
 export function GalleryContent({ products }: GalleryContentProps) {

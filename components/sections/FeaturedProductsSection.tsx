@@ -6,19 +6,10 @@ import { gsap } from "@/lib/gsap";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { MagneticButton } from "@/components/animations/MagneticButton";
-
-interface Product {
-  id: number;
-  name: string;
-  description: string | null;
-  image_url: string;
-  category: string | null;
-  featured: boolean;
-  price: number | null;
-}
+import type { ProductWithDetails } from "@/lib/types/product";
 
 interface FeaturedProductsSectionProps {
-  products: Product[];
+  products: ProductWithDetails[];
 }
 
 export function FeaturedProductsSection({

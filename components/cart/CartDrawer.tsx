@@ -137,6 +137,10 @@ export function CartDrawer() {
 
 									<div className="flex-1 min-w-0">
 										<h3 className="font-medium truncate">{item.name}</h3>
+										{/* Show variant name if present */}
+										{item.variantName && (
+											<p className="text-sm text-[#737373] truncate">{item.variantName}</p>
+										)}
 										<p className="text-[#22c55e] font-semibold mt-1">${Number(item.price).toFixed(2)}</p>
 
 										<div className="flex items-center gap-2 mt-3">

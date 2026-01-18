@@ -4,21 +4,11 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { gsap } from "gsap";
-import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { Badge } from "@/components/ui/Badge";
-
-interface Product {
-	id: number;
-	name: string;
-	description: string | null;
-	image_url: string;
-	category: string | null;
-	featured: boolean;
-	price?: number | null;
-}
+import type { ProductWithDetails } from "@/lib/types/product";
 
 interface ProductCardProps {
-	product: Product;
+	product: ProductWithDetails;
 	variant?: "default" | "featured";
 	index?: number;
 }
@@ -72,7 +62,27 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 		setIsHovered(true);
 	};
 
-	const hasPrice = product.price !== null && product.price !== undefined;
+	// Get display price based on variants
+	const getPriceDisplay = () => {
+		if (product.variants && product.variants.length > 0) {
+			const prices = product.variants.map((v) => Number(v.price));
+			const minPrice = Math.min(...prices);
+			const maxPrice = Math.max(...prices);
+
+			if (minPrice === maxPrice) {
+				return `$${minPrice.toFixed(2)}`;
+			}
+			return `From $${minPrice.toFixed(2)}`;
+		}
+		return product.price !== null && product.price !== undefined
+			? `$${Number(product.price).toFixed(2)}`
+			: null;
+	};
+
+	const priceDisplay = getPriceDisplay();
+	const primaryImage = product.images?.find((img) => img.is_primary) || product.images?.[0];
+	const imageUrl = primaryImage?.image_url || product.image_url;
+	const hasMultipleVariants = product.variants && product.variants.length > 1;
 
 	return (
 		<div
@@ -97,7 +107,7 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 			<Link href={`/product/${product.id}`} className="block">
 				<div ref={imageRef} className="aspect-square relative overflow-hidden bg-[#0f0f0f]">
 					<Image
-						src={product.image_url}
+						src={imageUrl}
 						alt={product.name}
 						fill
 						className={`object-cover transition-transform duration-500 ${isHovered ? "scale-110" : "scale-100"}`}
@@ -118,24 +128,22 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 						</div>
 					)}
 
-					{/* Quick add button - appears on hover */}
+					{/* Multiple images indicator */}
+					{product.images && product.images.length > 1 && (
+						<div className="absolute bottom-4 right-4 px-2 py-1 bg-black/70 rounded text-xs text-white">
+							+{product.images.length - 1}
+						</div>
+					)}
+
+					{/* Hover overlay with "View Options" for multi-variant products */}
 					<div
 						className={`absolute bottom-4 left-4 right-4 transition-all duration-300 z-20 ${
 							isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
 						}`}
-						onClick={(e) => e.preventDefault()}
 					>
-						<AddToCartButton
-							product={{
-								id: product.id,
-								name: product.name,
-								price: product.price ?? null,
-								image_url: product.image_url,
-							}}
-							size="sm"
-							className="w-full backdrop-blur-sm"
-							showPrice={false}
-						/>
+						<div className="w-full py-2 px-4 bg-[#22c55e] text-[#0a0a0a] font-medium rounded-xl text-center text-sm backdrop-blur-sm">
+							{hasMultipleVariants ? "View Options" : "View Details"}
+						</div>
 					</div>
 				</div>
 			</Link>
@@ -146,16 +154,23 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 					<h3 className="text-base font-semibold text-[#fafafa] line-clamp-1 group-hover:text-[#22c55e] transition-colors duration-300">
 						{product.name}
 					</h3>
-					{hasPrice && <span className="text-[#22c55e] font-bold whitespace-nowrap">${Number(product.price).toFixed(2)}</span>}
+					{priceDisplay && <span className="text-[#22c55e] font-bold whitespace-nowrap">{priceDisplay}</span>}
 				</div>
 
 				{product.description && <p className="text-sm text-[#737373] line-clamp-2 mb-3 leading-relaxed">{product.description}</p>}
 
-				{product.category && (
-					<Badge variant="default" className="text-xs">
-						{product.category}
-					</Badge>
-				)}
+				<div className="flex flex-wrap gap-2">
+					{product.category && (
+						<Badge variant="default" className="text-xs">
+							{product.category}
+						</Badge>
+					)}
+					{hasMultipleVariants && (
+						<Badge variant="outline" className="text-xs">
+							{product.variants.length} options
+						</Badge>
+					)}
+				</div>
 			</Link>
 
 			{/* Bottom border glow on hover */}
