@@ -136,6 +136,7 @@ export function Footer() {
 							>
 								Lattice Studios
 							</a>
+							.
 						</p>
 					</div>
 				</div>
