@@ -45,13 +45,16 @@ export function Footer() {
 							ThreeD4G
 						</Link>
 						<p className="text-[#737373] text-sm leading-relaxed max-w-xs">
-							Premium 3D printed accessories designed specifically for grow tent environments. Quality you can trust.
+							Premium 3D printed accessories designed specifically for grow tent
+							environments. Quality you can trust.
 						</p>
 					</div>
 
 					{/* Navigation */}
 					<div>
-						<h3 className="text-sm font-semibold text-[#fafafa] uppercase tracking-wider mb-4">Navigation</h3>
+						<h3 className="text-sm font-semibold text-[#fafafa] uppercase tracking-wider mb-4">
+							Navigation
+						</h3>
 						<ul className="space-y-3">
 							{navigation.main.map((item) => (
 								<li key={item.name}>
@@ -68,16 +71,30 @@ export function Footer() {
 
 					{/* Contact */}
 					<div>
-						<h3 className="text-sm font-semibold text-[#fafafa] uppercase tracking-wider mb-4">Get in Touch</h3>
-						<p className="text-[#a3a3a3] text-sm mb-4">Have questions or need a custom solution?</p>
+						<h3 className="text-sm font-semibold text-[#fafafa] uppercase tracking-wider mb-4">
+							Get in Touch
+						</h3>
+						<p className="text-[#a3a3a3] text-sm mb-4">
+							Have questions or need a custom solution?
+						</p>
 						<MagneticButton strength={0.1}>
 							<Link
 								href="/contact"
 								className="inline-flex items-center gap-2 text-[#22c55e] hover:text-[#4ade80] transition-colors duration-300 text-sm font-medium"
 							>
 								Contact Us
-								<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+								<svg
+									className="w-4 h-4"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M17 8l4 4m0 0l-4 4m4-4H3"
+									/>
 								</svg>
 							</Link>
 						</MagneticButton>
@@ -87,7 +104,9 @@ export function Footer() {
 				{/* Bottom */}
 				<div className="mt-16 pt-8 border-t border-[#171717]">
 					<div className="flex flex-col md:flex-row justify-between items-center gap-4">
-						<p className="text-[#737373] text-sm">&copy; {currentYear} ThreeD4G. All rights reserved.</p>
+						<p className="text-[#737373] text-sm">
+							&copy; {currentYear} ThreeD4G. All rights reserved.
+						</p>
 
 						{/* Social Links */}
 						<div className="flex items-center gap-4">
@@ -105,6 +124,19 @@ export function Footer() {
 								</MagneticButton>
 							))}
 						</div>
+					</div>
+					<div>
+						<p className="text-[#737373] text-xs">
+							Designed and built by{" "}
+							<a
+								href="https://www.instagram.com/latticestudiosdesign/"
+								className="underline hover:text-white transition-colors duration-300"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								Lattice Studios
+							</a>
+						</p>
 					</div>
 				</div>
 			</div>
