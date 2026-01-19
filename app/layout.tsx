@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SmoothScrollProvider } from "@/components/animations/SmoothScroll";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -34,16 +35,18 @@ export default function RootLayout({
 			<body
 				className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}
 			>
-				<SmoothScrollProvider>
-					{/* Grain overlay for premium texture */}
-					<div className="grain" aria-hidden="true" />
+				<PostHogProvider>
+					<SmoothScrollProvider>
+						{/* Grain overlay for premium texture */}
+						<div className="grain" aria-hidden="true" />
 
-					{children}
+						{children}
 
-					{/* Cart drawer - portal renders here */}
-					<CartDrawer />
-				</SmoothScrollProvider>
-				<Analytics />
+						{/* Cart drawer - portal renders here */}
+						<CartDrawer />
+					</SmoothScrollProvider>
+					<Analytics />
+				</PostHogProvider>
 			</body>
 		</html>
 	);

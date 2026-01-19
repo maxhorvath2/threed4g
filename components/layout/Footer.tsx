@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { MagneticButton } from "@/components/animations/MagneticButton";
+import posthog from "posthog-js";
 
 const navigation = {
 	main: [
@@ -118,6 +119,12 @@ export function Footer() {
 										aria-label={item.name}
 										target="_blank"
 										rel="noopener noreferrer"
+										onClick={() =>
+											posthog.capture("social_link_clicked", {
+												platform: item.name,
+												url: item.href,
+											})
+										}
 									>
 										{item.icon}
 									</a>
@@ -133,6 +140,11 @@ export function Footer() {
 								className="underline hover:text-white transition-colors duration-300"
 								target="_blank"
 								rel="noopener noreferrer"
+								onClick={() =>
+									posthog.capture("lattice_studios_link_clicked", {
+										url: "https://www.instagram.com/latticestudiosdesign/",
+									})
+								}
 							>
 								Lattice Studios
 							</a>

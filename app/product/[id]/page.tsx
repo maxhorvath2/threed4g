@@ -16,6 +16,11 @@ async function getProduct(id: string): Promise<ProductWithDetails | null> {
 	try {
 		const productId = parseInt(id);
 
+		// Validate that id is a valid integer
+		if (isNaN(productId)) {
+			return null;
+		}
+
 		// Fetch product and its images/variants in parallel
 		const [products, images, variants] = await Promise.all([
 			sql`SELECT * FROM products WHERE id = ${productId}`,

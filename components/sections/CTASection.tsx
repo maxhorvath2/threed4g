@@ -54,7 +54,7 @@ export function CTASection() {
 					{/* Description */}
 					<p className="text-lg text-[#a3a3a3] mb-10 max-w-2xl mx-auto leading-relaxed">
 						We love a challenge. Tell us about your setup and we&apos;ll design a solution that fits perfectly. From mounting
-						brackets to organization systems, if you can imagine it, we can print it.
+						brackets to organisation systems, if you can imagine it, we can print it.
 					</p>
 
 					{/* CTA Buttons */}

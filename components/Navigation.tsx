@@ -8,7 +8,13 @@ import { MagneticButton } from "@/components/animations/MagneticButton";
 
 export default function Navigation() {
 	const [scrolled, setScrolled] = useState(false);
+	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const pathname = usePathname();
+
+	// Close mobile menu when route changes
+	useEffect(() => {
+		setMobileMenuOpen(false);
+	}, [pathname]);
 
 	useEffect(() => {
 		if (typeof window !== "undefined") {
@@ -30,7 +36,7 @@ export default function Navigation() {
 	return (
 		<nav
 			className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-				scrolled ? "bg-[#050505]/90 backdrop-blur-xl border-b border-[#171717]" : "bg-transparent border-b border-transparent"
+				scrolled || mobileMenuOpen ? "bg-[#050505]/90 backdrop-blur-xl border-b border-[#171717]" : "bg-transparent border-b border-transparent"
 			}`}
 		>
 			<div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -72,11 +78,45 @@ export default function Navigation() {
 						<CartButton />
 
 						{/* Mobile Menu Button */}
-						<button className="md:hidden p-2 hover:bg-white/5 rounded-xl transition-colors">
+						<button
+							className="md:hidden p-2 hover:bg-white/5 rounded-xl transition-colors"
+							onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+							aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+						>
 							<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+								{mobileMenuOpen ? (
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+								) : (
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+								)}
 							</svg>
 						</button>
+					</div>
+				</div>
+
+				{/* Mobile Menu */}
+				<div
+					className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+						mobileMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
+					}`}
+				>
+					<div className="py-4 space-y-1 border-t border-[#171717]">
+						{navLinks.map((link) => {
+							const isActive = pathname === link.href;
+							return (
+								<Link
+									key={link.href}
+									href={link.href}
+									className={`block px-4 py-3 text-base font-medium transition-colors duration-300 rounded-lg ${
+										isActive
+											? "text-[#22c55e] bg-[#22c55e]/10"
+											: "text-[#a3a3a3] hover:text-[#fafafa] hover:bg-white/5"
+									}`}
+								>
+									{link.label}
+								</Link>
+							);
+						})}
 					</div>
 				</div>
 			</div>

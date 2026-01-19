@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import posthog from "posthog-js";
 
 export interface CartItem {
 	id: string; // Composite key: "productId" or "productId-variantId"
@@ -81,6 +82,16 @@ export const useCartStore = create<CartStore>()(
 						],
 					});
 				}
+
+				// Track add to cart event
+				posthog.capture("product_added_to_cart", {
+					product_id: product.productId,
+					product_name: product.name,
+					variant_id: product.variantId,
+					variant_name: product.variantName,
+					price: product.price,
+					source_page: typeof window !== "undefined" ? window.location.pathname : null,
+				});
 
 				// Auto-open cart when adding items
 				set({ isOpen: true });

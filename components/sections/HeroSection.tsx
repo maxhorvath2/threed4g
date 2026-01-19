@@ -237,8 +237,8 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Scroll indicator - positioned outside content div */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-fade-in stagger-5 z-20">
+      {/* Scroll indicator - positioned outside content div, hidden on mobile */}
+      <div className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-2 animate-fade-in stagger-5 z-20">
         <span className="text-xs text-[#737373] uppercase tracking-widest">
           Scroll
         </span>

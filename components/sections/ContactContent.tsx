@@ -4,36 +4,77 @@ import { useRef, useEffect, useState } from "react";
 import { gsap } from "@/lib/gsap";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import posthog from "posthog-js";
 
 const features = [
 	{
 		icon: (
-			<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+			<svg
+				className="w-5 h-5"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
+				<path
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					strokeWidth={1.5}
+					d="M5 13l4 4L19 7"
+				/>
 			</svg>
 		),
-		text: "Custom mounting solutions",
+		text: "Tent ventilation hardware",
 	},
 	{
 		icon: (
-			<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+			<svg
+				className="w-5 h-5"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
+				<path
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					strokeWidth={1.5}
+					d="M5 13l4 4L19 7"
+				/>
 			</svg>
 		),
-		text: "Organization accessories",
+		text: "Organisation accessories",
 	},
 	{
 		icon: (
-			<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+			<svg
+				className="w-5 h-5"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
+				<path
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					strokeWidth={1.5}
+					d="M5 13l4 4L19 7"
+				/>
 			</svg>
 		),
 		text: "Equipment holders and brackets",
 	},
 	{
 		icon: (
-			<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+			<svg
+				className="w-5 h-5"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
+				<path
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					strokeWidth={1.5}
+					d="M5 13l4 4L19 7"
+				/>
 			</svg>
 		),
 		text: "Custom design services",
@@ -48,7 +89,9 @@ export function ContactContent() {
 		subject: "",
 		message: "",
 	});
-	const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+	const [status, setStatus] = useState<
+		"idle" | "loading" | "success" | "error"
+	>("idle");
 	const [errorMessage, setErrorMessage] = useState("");
 
 	useEffect(() => {
@@ -94,7 +137,9 @@ export function ContactContent() {
 		return () => ctx.revert();
 	}, []);
 
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+	const handleChange = (
+		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+	) => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({ ...prev, [name]: value }));
 	};
@@ -119,19 +164,26 @@ export function ContactContent() {
 				throw new Error(data.error || "Failed to send message");
 			}
 
+			// Track successful contact form submission
+			posthog.capture("contact_form_submitted", {
+				subject: formData.subject,
+			});
+
 			setStatus("success");
 			setFormData({ name: "", email: "", subject: "", message: "" });
 		} catch (error) {
 			setStatus("error");
-			setErrorMessage(error instanceof Error ? error.message : "Failed to send message");
+			setErrorMessage(
+				error instanceof Error ? error.message : "Failed to send message",
+			);
 		}
 	};
 
 	return (
 		<section ref={sectionRef} className="pt-32 pb-20 relative">
 			{/* Background elements */}
-			<div className="absolute top-1/4 left-0 w-[400px] h-[400px] rounded-full bg-[#22c55e]/5 blur-[150px] pointer-events-none" />
-			<div className="absolute bottom-1/4 right-0 w-[300px] h-[300px] rounded-full bg-[#22c55e]/5 blur-[120px] pointer-events-none" />
+			<div className="absolute top-1/4 left-0 w-100 h-100 rounded-full bg-[#22c55e]/5 blur-[150px] pointer-events-none" />
+			<div className="absolute bottom-1/4 right-0 w-75 h-75 rounded-full bg-[#22c55e]/5 blur-[120px] pointer-events-none" />
 
 			<div className="max-w-5xl mx-auto px-6">
 				{/* Header */}
@@ -158,11 +210,11 @@ export function ContactContent() {
 								About ThreeD4G
 							</h2>
 							<p className="text-[#a3a3a3] leading-relaxed">
-								ThreeD4G specializes in creating high-quality 3D printed
-								accessories specifically designed for grow tent environments.
-								We understand the unique challenges and requirements of indoor
+								ThreeD4G specialises in creating high-quality 3D printed
+								accessories specifically designed for grow tent environments. We
+								understand the unique challenges and requirements of indoor
 								growing setups, and our products are engineered to enhance
-								functionality, organization, and efficiency.
+								functionality, organisation, and efficiency.
 							</p>
 						</div>
 
@@ -189,15 +241,15 @@ export function ContactContent() {
 						{/* Response Time Note */}
 						<div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#171717]">
 							<p className="text-sm text-[#737373]">
-								We typically respond within 24-48 hours. For urgent
-								matters, please indicate so in your message.
+								We typically respond within 24-48 hours. For urgent matters,
+								please indicate so in your message.
 							</p>
 						</div>
 					</div>
 
 					{/* Right Column - Contact Form */}
 					<div className="contact-right">
-						<Card variant="elevated" className="p-8 lg:p-10">
+						<Card variant="elevated" className="p-6 sm:p-8 lg:p-10">
 							<h2 className="text-2xl font-semibold text-[#fafafa] mb-6 font-display">
 								Send us a Message
 							</h2>
@@ -205,18 +257,27 @@ export function ContactContent() {
 							{status === "success" ? (
 								<div className="text-center py-8">
 									<div className="w-16 h-16 rounded-full bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center text-[#22c55e] mx-auto mb-4">
-										<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+										<svg
+											className="w-8 h-8"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth={2}
+												d="M5 13l4 4L19 7"
+											/>
 										</svg>
 									</div>
-									<h3 className="text-xl font-semibold text-[#fafafa] mb-2">Message Sent!</h3>
+									<h3 className="text-xl font-semibold text-[#fafafa] mb-2">
+										Message Sent!
+									</h3>
 									<p className="text-[#a3a3a3] mb-6">
 										Thank you for reaching out. We&apos;ll get back to you soon.
 									</p>
-									<Button
-										variant="outline"
-										onClick={() => setStatus("idle")}
-									>
+									<Button variant="outline" onClick={() => setStatus("idle")}>
 										Send Another Message
 									</Button>
 								</div>
@@ -224,7 +285,10 @@ export function ContactContent() {
 								<form onSubmit={handleSubmit} className="space-y-5">
 									{/* Name */}
 									<div>
-										<label htmlFor="name" className="block text-sm font-medium text-[#a3a3a3] mb-2">
+										<label
+											htmlFor="name"
+											className="block text-sm font-medium text-[#a3a3a3] mb-2"
+										>
 											Name
 										</label>
 										<input
@@ -241,7 +305,10 @@ export function ContactContent() {
 
 									{/* Email */}
 									<div>
-										<label htmlFor="email" className="block text-sm font-medium text-[#a3a3a3] mb-2">
+										<label
+											htmlFor="email"
+											className="block text-sm font-medium text-[#a3a3a3] mb-2"
+										>
 											Email
 										</label>
 										<input
@@ -258,7 +325,10 @@ export function ContactContent() {
 
 									{/* Subject */}
 									<div>
-										<label htmlFor="subject" className="block text-sm font-medium text-[#a3a3a3] mb-2">
+										<label
+											htmlFor="subject"
+											className="block text-sm font-medium text-[#a3a3a3] mb-2"
+										>
 											Subject
 										</label>
 										<input
@@ -275,7 +345,10 @@ export function ContactContent() {
 
 									{/* Message */}
 									<div>
-										<label htmlFor="message" className="block text-sm font-medium text-[#a3a3a3] mb-2">
+										<label
+											htmlFor="message"
+											className="block text-sm font-medium text-[#a3a3a3] mb-2"
+										>
 											Message
 										</label>
 										<textarea
@@ -305,17 +378,42 @@ export function ContactContent() {
 									>
 										{status === "loading" ? (
 											<>
-												<svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-													<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-													<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+												<svg
+													className="animate-spin w-4 h-4"
+													viewBox="0 0 24 24"
+													fill="none"
+												>
+													<circle
+														className="opacity-25"
+														cx="12"
+														cy="12"
+														r="10"
+														stroke="currentColor"
+														strokeWidth="4"
+													/>
+													<path
+														className="opacity-75"
+														fill="currentColor"
+														d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+													/>
 												</svg>
 												Sending...
 											</>
 										) : (
 											<>
 												Send Message
-												<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-													<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+												<svg
+													className="w-4 h-4"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke="currentColor"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M14 5l7 7m0 0l-7 7m7-7H3"
+													/>
 												</svg>
 											</>
 										)}
@@ -329,9 +427,8 @@ export function ContactContent() {
 				{/* Bottom Note */}
 				<div className="mt-20 text-center">
 					<p className="text-[#737373] max-w-2xl mx-auto">
-						Thank you for visiting ThreeD4G. We&apos;re passionate about
-						helping growers optimize their setups with quality 3D printed
-						accessories.
+						Thank you for visiting ThreeD4G. We&apos;re passionate about helping
+						growers optimise their setups with quality 3D printed accessories.
 					</p>
 				</div>
 			</div>
