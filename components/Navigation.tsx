@@ -11,11 +11,6 @@ export default function Navigation() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const pathname = usePathname();
 
-	// Close mobile menu when route changes
-	useEffect(() => {
-		setMobileMenuOpen(false);
-	}, [pathname]);
-
 	useEffect(() => {
 		if (typeof window !== "undefined") {
 			const handleScroll = () => {
@@ -31,12 +26,15 @@ export default function Navigation() {
 		{ href: "/", label: "Home" },
 		{ href: "/gallery", label: "Gallery" },
 		{ href: "/contact", label: "Contact" },
+		{ href: "/links", label: "Links" },
 	];
 
 	return (
 		<nav
 			className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-				scrolled || mobileMenuOpen ? "bg-[#050505]/90 backdrop-blur-xl border-b border-[#171717]" : "bg-transparent border-b border-transparent"
+				scrolled || mobileMenuOpen
+					? "bg-[#050505]/90 backdrop-blur-xl border-b border-[#171717]"
+					: "bg-transparent border-b border-transparent"
 			}`}
 		>
 			<div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -61,7 +59,9 @@ export default function Navigation() {
 									key={link.href}
 									href={link.href}
 									className={`relative px-4 py-2 text-sm font-medium transition-colors duration-300 rounded-lg ${
-										isActive ? "text-[#22c55e]" : "text-[#a3a3a3] hover:text-[#fafafa]"
+										isActive
+											? "text-[#22c55e]"
+											: "text-[#a3a3a3] hover:text-[#fafafa]"
 									}`}
 								>
 									{link.label}
@@ -83,11 +83,26 @@ export default function Navigation() {
 							onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
 							aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
 						>
-							<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<svg
+								className="w-6 h-6"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor"
+							>
 								{mobileMenuOpen ? (
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={1.5}
+										d="M6 18L18 6M6 6l12 12"
+									/>
 								) : (
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={1.5}
+										d="M4 6h16M4 12h16M4 18h16"
+									/>
 								)}
 							</svg>
 						</button>
@@ -107,6 +122,7 @@ export default function Navigation() {
 								<Link
 									key={link.href}
 									href={link.href}
+									onClick={() => setMobileMenuOpen(false)}
 									className={`block px-4 py-3 text-base font-medium transition-colors duration-300 rounded-lg ${
 										isActive
 											? "text-[#22c55e] bg-[#22c55e]/10"

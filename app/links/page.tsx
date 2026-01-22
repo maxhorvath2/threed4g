@@ -65,15 +65,23 @@ export default function LinksPage() {
 		<div className="min-h-screen bg-[#050505]">
 			<Navigation />
 
-			<main className="max-w-2xl mx-auto px-4 py-24 min-h-[calc(100vh-200px)]">
-				<div className="text-center mb-12">
-					<h1 className="text-4xl md:text-5xl font-bold text-[#fafafa] mb-4">
-						Links
-					</h1>
-					<p className="text-[#a3a3a3] text-lg">
-						Check out our partner sites and exclusive offers
-					</p>
-				</div>
+			{/* Background elements */}
+			<div className="absolute top-0 right-0 w-125 h-125 rounded-full bg-[#22c55e]/5 blur-[150px] pointer-events-none" />
+
+			<main className="relative pt-32 pb-20 min-h-[calc(100vh-200px)]">
+				<div className="max-w-2xl mx-auto px-6">
+					{/* Header */}
+					<div className="text-center mb-16">
+						<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">
+							Partner Sites
+						</span>
+						<h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold text-[#fafafa] mb-6">
+							Our <span className="text-[#22c55e]">Links</span>
+						</h1>
+						<p className="text-lg text-[#a3a3a3] max-w-xl mx-auto">
+							Check out our partner sites and exclusive offers with special promo codes.
+						</p>
+					</div>
 
 				{loading ? (
 					<div className="text-center py-12">
@@ -127,6 +135,7 @@ export default function LinksPage() {
 						))}
 					</div>
 				)}
+				</div>
 			</main>
 
 			{/* Promo Code Modal */}
