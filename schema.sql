@@ -56,3 +56,19 @@ CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(p
 -- Migration: Add price column if it doesn't exist (for existing databases)
 -- Run this manually: ALTER TABLE products ADD COLUMN IF NOT EXISTS price DECIMAL(10, 2);
 
+-- Links table (for linktree-style page)
+CREATE TABLE IF NOT EXISTS links (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  url TEXT NOT NULL,
+  promo_code VARCHAR(100),
+  description TEXT,
+  sort_order INTEGER DEFAULT 0,
+  active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_links_sort_order ON links(sort_order);
+CREATE INDEX IF NOT EXISTS idx_links_active ON links(active);
+

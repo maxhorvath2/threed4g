@@ -10,6 +10,7 @@ import type {
 	CreateProductImageInput,
 	CreateProductVariantInput,
 } from "@/lib/types/product";
+import type { Link } from "@/lib/types/link";
 
 interface Admin {
 	id: number;
@@ -37,8 +38,9 @@ export default function AdminDashboard() {
 	const router = useRouter();
 	const [products, setProducts] = useState<ProductWithDetails[]>([]);
 	const [admins, setAdmins] = useState<Admin[]>([]);
+	const [links, setLinks] = useState<Link[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [activeTab, setActiveTab] = useState<"products" | "admins">("products");
+	const [activeTab, setActiveTab] = useState<"products" | "admins" | "links">("products");
 	const [showProductForm, setShowProductForm] = useState(false);
 	const [showAdminForm, setShowAdminForm] = useState(false);
 	const [editingProduct, setEditingProduct] =
@@ -62,15 +64,26 @@ export default function AdminDashboard() {
 	const [adminUsername, setAdminUsername] = useState("");
 	const [adminPassword, setAdminPassword] = useState("");
 
+	// Link form state
+	const [showLinkForm, setShowLinkForm] = useState(false);
+	const [editingLink, setEditingLink] = useState<Link | null>(null);
+	const [linkTitle, setLinkTitle] = useState("");
+	const [linkUrl, setLinkUrl] = useState("");
+	const [linkPromoCode, setLinkPromoCode] = useState("");
+	const [linkDescription, setLinkDescription] = useState("");
+	const [linkSortOrder, setLinkSortOrder] = useState("");
+	const [linkActive, setLinkActive] = useState(true);
+
 	useEffect(() => {
 		fetchData();
 	}, []);
 
 	const fetchData = async () => {
 		try {
-			const [productsRes, adminsRes] = await Promise.all([
+			const [productsRes, adminsRes, linksRes] = await Promise.all([
 				fetch("/api/products"),
 				fetch("/api/admin"),
+				fetch("/api/links"),
 			]);
 
 			if (productsRes.ok) {
@@ -81,6 +94,11 @@ export default function AdminDashboard() {
 			if (adminsRes.ok) {
 				const adminsData = await adminsRes.json();
 				setAdmins(adminsData);
+			}
+
+			if (linksRes.ok) {
+				const linksData = await linksRes.json();
+				setLinks(linksData);
 			}
 		} catch (error) {
 			console.error("Error fetching data:", error);
@@ -352,6 +370,76 @@ export default function AdminDashboard() {
 		setShowAdminForm(false);
 	};
 
+	const handleLinkSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		try {
+			const url = editingLink?.id
+				? `/api/links/${editingLink.id}`
+				: "/api/links";
+			const method = editingLink?.id ? "PUT" : "POST";
+
+			const res = await fetch(url, {
+				method,
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					title: linkTitle,
+					url: linkUrl,
+					promo_code: linkPromoCode || null,
+					description: linkDescription || null,
+					sort_order: linkSortOrder.trim() !== "" ? parseInt(linkSortOrder) : undefined,
+					active: linkActive,
+				}),
+			});
+
+			if (!res.ok) {
+				const data = await res.json();
+				throw new Error(data.error || "Failed to save link");
+			}
+
+			await fetchData();
+			resetLinkForm();
+		} catch (error) {
+			const message =
+				error instanceof Error ? error.message : "Failed to save link";
+			alert(message);
+		}
+	};
+
+	const handleDeleteLink = async (id: number) => {
+		if (!confirm("Are you sure you want to delete this link?")) return;
+
+		try {
+			const res = await fetch(`/api/links/${id}`, { method: "DELETE" });
+			if (!res.ok) throw new Error("Failed to delete link");
+			await fetchData();
+		} catch (error) {
+			alert("Failed to delete link");
+			console.log(error);
+		}
+	};
+
+	const handleEditLink = (link: Link) => {
+		setEditingLink(link);
+		setLinkTitle(link.title);
+		setLinkUrl(link.url);
+		setLinkPromoCode(link.promo_code || "");
+		setLinkDescription(link.description || "");
+		setLinkSortOrder(link.sort_order.toString());
+		setLinkActive(link.active);
+		setShowLinkForm(true);
+	};
+
+	const resetLinkForm = () => {
+		setEditingLink(null);
+		setLinkTitle("");
+		setLinkUrl("");
+		setLinkPromoCode("");
+		setLinkDescription("");
+		setLinkSortOrder("");
+		setLinkActive(true);
+		setShowLinkForm(false);
+	};
+
 	// Helper to get price display for product card
 	const getPriceDisplay = (product: ProductWithDetails) => {
 		if (!product.variants || product.variants.length === 0) {
@@ -418,6 +506,16 @@ export default function AdminDashboard() {
 						}`}
 					>
 						Admins
+					</button>
+					<button
+						onClick={() => setActiveTab("links")}
+						className={`px-6 py-3 font-medium transition-colors ${
+							activeTab === "links"
+								? "text-[#22c55e] border-b-2 border-[#22c55e]"
+								: "text-[#a3a3a3] hover:text-[#fafafa]"
+						}`}
+					>
+						Links
 					</button>
 				</div>
 
@@ -884,6 +982,198 @@ export default function AdminDashboard() {
 									>
 										Delete
 									</button>
+								</div>
+							))}
+						</div>
+					</div>
+				)}
+
+				{/* Links Tab */}
+				{activeTab === "links" && (
+					<div>
+						<div className="flex justify-between items-center mb-6">
+							<h2 className="text-2xl font-semibold text-[#fafafa]">Links</h2>
+							<button
+								onClick={() => {
+									resetLinkForm();
+									setShowLinkForm(true);
+								}}
+								className="px-4 py-2 bg-[#22c55e] text-[#0a0a0a] font-medium rounded-lg hover:bg-[#16a34a] transition-colors"
+							>
+								Add Link
+							</button>
+						</div>
+
+						{/* Link Form */}
+						{showLinkForm && (
+							<div className="mb-8 border border-[#262626] rounded-lg p-6 bg-[#111111]">
+								<h3 className="text-xl font-semibold text-[#fafafa] mb-4">
+									{editingLink ? "Edit Link" : "Add New Link"}
+								</h3>
+								<form onSubmit={handleLinkSubmit} className="space-y-4">
+									<div>
+										<label className="block text-sm font-medium text-[#fafafa] mb-2">
+											Title *
+										</label>
+										<input
+											type="text"
+											value={linkTitle}
+											onChange={(e) => setLinkTitle(e.target.value)}
+											required
+											placeholder="e.g., Visit our Instagram"
+											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
+										/>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-[#fafafa] mb-2">
+											URL *
+										</label>
+										<input
+											type="url"
+											value={linkUrl}
+											onChange={(e) => setLinkUrl(e.target.value)}
+											required
+											placeholder="https://example.com"
+											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
+										/>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-[#fafafa] mb-2">
+											Promo Code (optional)
+										</label>
+										<input
+											type="text"
+											value={linkPromoCode}
+											onChange={(e) => setLinkPromoCode(e.target.value)}
+											placeholder="e.g., SAVE20"
+											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
+										/>
+										<p className="text-[#737373] text-xs mt-1">
+											If set, users will see a modal to copy the code before visiting the site
+										</p>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-[#fafafa] mb-2">
+											Description (optional)
+										</label>
+										<textarea
+											value={linkDescription}
+											onChange={(e) => setLinkDescription(e.target.value)}
+											rows={2}
+											placeholder="Brief description of the link"
+											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
+										/>
+									</div>
+
+									<div className="grid grid-cols-2 gap-4">
+										<div>
+											<label className="block text-sm font-medium text-[#fafafa] mb-2">
+												Sort Order
+											</label>
+											<input
+												type="number"
+												value={linkSortOrder}
+												onChange={(e) => setLinkSortOrder(e.target.value)}
+												placeholder="Auto"
+												className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
+											/>
+											<p className="text-[#737373] text-xs mt-1">
+												Leave empty to auto-assign. Lower numbers appear first.
+											</p>
+										</div>
+										<div className="flex items-center pt-8">
+											<input
+												type="checkbox"
+												id="linkActive"
+												checked={linkActive}
+												onChange={(e) => setLinkActive(e.target.checked)}
+												className="w-4 h-4 text-[#22c55e] bg-[#1a1a1a] border-[#262626] rounded focus:ring-[#22c55e]"
+											/>
+											<label
+												htmlFor="linkActive"
+												className="ml-2 text-sm text-[#fafafa]"
+											>
+												Active (visible on /links page)
+											</label>
+										</div>
+									</div>
+
+									<div className="flex gap-4">
+										<button
+											type="submit"
+											className="px-6 py-2 bg-[#22c55e] text-[#0a0a0a] font-medium rounded-lg hover:bg-[#16a34a] transition-colors"
+										>
+											{editingLink ? "Update" : "Create"}
+										</button>
+										<button
+											type="button"
+											onClick={resetLinkForm}
+											className="px-6 py-2 border border-[#262626] text-[#fafafa] rounded-lg hover:bg-[#1a1a1a] transition-colors"
+										>
+											Cancel
+										</button>
+									</div>
+								</form>
+							</div>
+						)}
+
+						{/* Links List */}
+						<div className="space-y-4">
+							{links.length === 0 && (
+								<p className="text-[#737373] text-center py-8">
+									No links added yet. Click &quot;Add Link&quot; to create your first link.
+								</p>
+							)}
+							{links.map((link) => (
+								<div
+									key={link.id}
+									className="flex justify-between items-center p-4 border border-[#262626] rounded-lg bg-[#111111]"
+								>
+									<div className="flex-1 min-w-0">
+										<div className="flex items-center gap-2 mb-1">
+											<p className="text-[#fafafa] font-semibold truncate">
+												{link.title}
+											</p>
+											{!link.active && (
+												<span className="px-2 py-0.5 text-xs bg-[#7f1d1d]/20 text-[#fca5a5] rounded border border-[#7f1d1d]">
+													Inactive
+												</span>
+											)}
+											{link.promo_code && (
+												<span className="px-2 py-0.5 text-xs bg-[#22c55e]/20 text-[#22c55e] rounded border border-[#22c55e]/50">
+													Has promo code
+												</span>
+											)}
+										</div>
+										<p className="text-[#737373] text-sm truncate">
+											{link.url}
+										</p>
+										{link.description && (
+											<p className="text-[#a3a3a3] text-sm mt-1 line-clamp-1">
+												{link.description}
+											</p>
+										)}
+										<p className="text-[#525252] text-xs mt-1">
+											Sort order: {link.sort_order}
+										</p>
+									</div>
+									<div className="flex gap-2 ml-4">
+										<button
+											onClick={() => handleEditLink(link)}
+											className="px-4 py-2 border border-[#262626] text-[#fafafa] rounded-lg hover:bg-[#1a1a1a] transition-colors"
+										>
+											Edit
+										</button>
+										<button
+											onClick={() => handleDeleteLink(link.id)}
+											className="px-4 py-2 border border-[#7f1d1d] text-[#fca5a5] rounded-lg hover:bg-[#7f1d1d]/20 transition-colors"
+										>
+											Delete
+										</button>
+									</div>
 								</div>
 							))}
 						</div>
