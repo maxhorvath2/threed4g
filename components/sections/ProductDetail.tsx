@@ -18,9 +18,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
 	const imageContainerRef = useRef<HTMLDivElement>(null);
 	const [isHovered, setIsHovered] = useState(false);
 	const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-	const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-		product.variants.length === 1 ? product.variants[0] : null
-	);
+	const [selectedVariant, setSelectedVariant] =
+		useState<ProductVariant | null>(
+			product.variants.length === 1 ? product.variants[0] : null,
+		);
 
 	const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
 		if (!imageContainerRef.current) return;
@@ -92,8 +93,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
 			<div className="max-w-7xl mx-auto">
 				{/* Back button */}
 				<FadeIn delay={0} duration={0.6}>
-					<Link href="/gallery">
-						<Button variant="ghost" size="sm" className="mb-8 gap-2">
+					<Link href="/products">
+						<Button
+							variant="ghost"
+							size="sm"
+							className="mb-8 gap-2"
+						>
 							<svg
 								className="w-4 h-4"
 								fill="none"
@@ -107,7 +112,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 									d="M15 19l-7-7 7-7"
 								/>
 							</svg>
-							Back to Gallery
+							Back to Products
 						</Button>
 					</Link>
 				</FadeIn>
@@ -136,11 +141,19 @@ export function ProductDetail({ product }: ProductDetailProps) {
 								{/* Image */}
 								<div className="aspect-square relative overflow-hidden bg-[#0f0f0f]">
 									<Image
-										src={currentImage?.image_url || product.image_url}
-										alt={currentImage?.alt_text || product.name}
+										src={
+											currentImage?.image_url ||
+											product.image_url
+										}
+										alt={
+											currentImage?.alt_text ||
+											product.name
+										}
 										fill
 										className={`object-cover transition-transform duration-500 ${
-											isHovered ? "scale-105" : "scale-100"
+											isHovered
+												? "scale-105"
+												: "scale-100"
 										}`}
 										sizes="(max-width: 1024px) 100vw, 50vw"
 										priority
@@ -149,7 +162,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
 									{/* Overlay gradient */}
 									<div
 										className={`absolute inset-0 bg-linear-to-t from-[#050505]/50 via-transparent to-transparent transition-opacity duration-300 ${
-											isHovered ? "opacity-100" : "opacity-0"
+											isHovered
+												? "opacity-100"
+												: "opacity-0"
 										}`}
 									/>
 								</div>
@@ -157,7 +172,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
 								{/* Featured badge */}
 								{product.featured && (
 									<div className="absolute top-4 left-4 z-20">
-										<Badge variant="primary">Featured</Badge>
+										<Badge variant="primary">
+											Featured
+										</Badge>
 									</div>
 								)}
 
@@ -175,7 +192,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
 									{product.images.map((img, index) => (
 										<button
 											key={img.id || index}
-											onClick={() => setSelectedImageIndex(index)}
+											onClick={() =>
+												setSelectedImageIndex(index)
+											}
 											className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${
 												selectedImageIndex === index
 													? "border-[#22c55e]"
@@ -184,7 +203,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
 										>
 											<Image
 												src={img.image_url}
-												alt={img.alt_text || `${product.name} - Image ${index + 1}`}
+												alt={
+													img.alt_text ||
+													`${product.name} - Image ${index + 1}`
+												}
 												fill
 												className="object-cover"
 												sizes="80px"
@@ -240,26 +262,35 @@ export function ProductDetail({ product }: ProductDetailProps) {
 										{product.variants.map((variant) => (
 											<button
 												key={variant.id}
-												onClick={() => setSelectedVariant(variant)}
+												onClick={() =>
+													setSelectedVariant(variant)
+												}
 												disabled={!variant.in_stock}
 												className={`px-4 py-3 rounded-lg border transition-all ${
-													selectedVariant?.id === variant.id
+													selectedVariant?.id ===
+													variant.id
 														? "border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]"
 														: variant.in_stock
 															? "border-[#262626] hover:border-[#404040] text-[#fafafa]"
 															: "border-[#262626] text-[#525252] cursor-not-allowed opacity-50"
 												}`}
 											>
-												<div className="text-sm font-medium">{variant.name}</div>
+												<div className="text-sm font-medium">
+													{variant.name}
+												</div>
 												<div className="text-xs mt-1 opacity-75">
-													${Number(variant.price).toFixed(2)}
+													$
+													{Number(
+														variant.price,
+													).toFixed(2)}
 												</div>
 											</button>
 										))}
 									</div>
 									{!selectedVariant && (
 										<p className="text-sm text-[#737373] mt-2">
-											Please select an option to add to cart
+											Please select an option to add to
+											cart
 										</p>
 									)}
 								</div>
@@ -287,28 +318,43 @@ export function ProductDetail({ product }: ProductDetailProps) {
 									product={{
 										id: product.id,
 										name: product.name,
-										price: selectedVariant?.price ?? product.variants[0]?.price ?? product.price ?? null,
-										image_url: currentImage?.image_url || product.image_url,
+										price:
+											selectedVariant?.price ??
+											product.variants[0]?.price ??
+											product.price ??
+											null,
+										image_url:
+											currentImage?.image_url ||
+											product.image_url,
 									}}
 									selectedVariant={
 										selectedVariant
 											? {
 													id: selectedVariant.id,
 													name: selectedVariant.name,
-													price: Number(selectedVariant.price),
+													price: Number(
+														selectedVariant.price,
+													),
 												}
 											: product.variants.length === 1
 												? {
-														id: product.variants[0].id,
-														name: product.variants[0].name,
-														price: Number(product.variants[0].price),
+														id: product.variants[0]
+															.id,
+														name: product
+															.variants[0].name,
+														price: Number(
+															product.variants[0]
+																.price,
+														),
 													}
 												: undefined
 									}
 									size="lg"
 									className="w-full sm:w-auto"
 									showPrice={true}
-									disabled={hasMultipleVariants && !selectedVariant}
+									disabled={
+										hasMultipleVariants && !selectedVariant
+									}
 								/>
 								{hasMultipleVariants && !selectedVariant && (
 									<p className="text-sm text-[#fca5a5] mt-2">

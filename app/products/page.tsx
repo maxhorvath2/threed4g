@@ -1,6 +1,6 @@
 import Navigation from "@/components/Navigation";
 import { Footer } from "@/components/layout/Footer";
-import { GalleryContent } from "@/components/sections/GalleryContent";
+import { ProductsContent } from "@/components/sections/ProductsContent";
 import { sql } from "@/lib/db";
 import type {
 	Product,
@@ -93,13 +93,13 @@ async function getAllProducts(): Promise<ProductWithDetails[]> {
 	}
 }
 
-export default async function Gallery() {
+export default async function Products() {
 	const products = await getAllProducts();
 
 	return (
 		<div className="min-h-screen bg-[#050505]">
 			<Navigation />
-			<GalleryContent products={products} />
+			<ProductsContent products={products} />
 			<Footer />
 		</div>
 	);

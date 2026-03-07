@@ -36,25 +36,30 @@ export function CTASection() {
 			<div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#22c55e]/30 to-transparent" />
 
 			{/* Floating orbs */}
-			<div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] rounded-full bg-[#22c55e]/10 blur-[100px] pointer-events-none animate-float-slow" />
-			<div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] rounded-full bg-[#22c55e]/10 blur-[80px] pointer-events-none animate-float-delayed" />
+			<div className="absolute top-1/4 left-1/4 w-75 h-75 rounded-full bg-[#22c55e]/10 blur-[100px] pointer-events-none animate-float-slow" />
+			<div className="absolute bottom-1/4 right-1/4 w-62.5 h-62.5 rounded-full bg-[#22c55e]/10 blur-[80px] pointer-events-none animate-float-delayed" />
 
 			<div className="relative max-w-4xl mx-auto px-6 text-center">
 				<div ref={contentRef}>
 					{/* Badge */}
 					<div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#22c55e]/20 bg-[#22c55e]/5 mb-8">
-						<span className="text-sm text-[#22c55e] font-medium">Custom Orders Available</span>
+						<span className="text-sm text-[#22c55e] font-medium">
+							Custom Orders Available
+						</span>
 					</div>
 
 					{/* Heading */}
 					<h2 className="text-headline text-[#fafafa] mb-6">
-						Need Something <span className="text-[#22c55e]">Custom?</span>
+						Need Something{" "}
+						<span className="text-[#22c55e]">Custom?</span>
 					</h2>
 
 					{/* Description */}
 					<p className="text-lg text-[#a3a3a3] mb-10 max-w-2xl mx-auto leading-relaxed">
-						We love a challenge. Tell us about your setup and we&apos;ll design a solution that fits perfectly. From mounting
-						brackets to organisation systems, if you can imagine it, we can print it.
+						We love a challenge. Tell us about your setup and
+						we&apos;ll design a solution that fits perfectly. From
+						mounting brackets to organisation systems, if you can
+						imagine it, we can print it.
 					</p>
 
 					{/* CTA Buttons */}
@@ -63,7 +68,12 @@ export function CTASection() {
 							<Button asChild size="lg">
 								<Link href="/contact">
 									Start a Conversation
-									<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<svg
+										className="w-5 h-5"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
 										<path
 											strokeLinecap="round"
 											strokeLinejoin="round"
@@ -77,7 +87,7 @@ export function CTASection() {
 
 						<MagneticButton strength={0.15}>
 							<Button asChild variant="ghost" size="lg">
-								<Link href="/gallery">Browse Gallery</Link>
+								<Link href="/products">Browse Products</Link>
 							</Button>
 						</MagneticButton>
 					</div>
