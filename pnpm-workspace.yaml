@@ -1,5 +1,10 @@
 packages:
   - .
+
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+
+onlyBuiltDependencies:
+  - core-js@3.47.0
+  - protobufjs@7.5.4

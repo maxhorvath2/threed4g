@@ -24,7 +24,7 @@ export default function Navigation() {
 
 	const navLinks = [
 		{ href: "/", label: "Home" },
-		{ href: "/gallery", label: "Gallery" },
+		{ href: "/products", label: "Products" },
 		{ href: "/contact", label: "Contact" },
 		{ href: "/links", label: "Links" },
 	];
@@ -41,7 +41,10 @@ export default function Navigation() {
 				<div className="relative flex justify-between items-center h-20">
 					{/* Logo */}
 					<MagneticButton strength={0.15}>
-						<Link href="/" className="group flex items-center gap-2">
+						<Link
+							href="/"
+							className="group flex items-center gap-2"
+						>
 							<span className="text-2xl font-display font-bold text-[#fafafa] transition-all duration-300 group-hover:text-[#22c55e]">
 								ThreeD4G
 							</span>
@@ -81,7 +84,9 @@ export default function Navigation() {
 						<button
 							className="md:hidden p-2 hover:bg-white/5 rounded-xl transition-colors"
 							onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-							aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+							aria-label={
+								mobileMenuOpen ? "Close menu" : "Open menu"
+							}
 						>
 							<svg
 								className="w-6 h-6"
@@ -112,7 +117,9 @@ export default function Navigation() {
 				{/* Mobile Menu */}
 				<div
 					className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-						mobileMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
+						mobileMenuOpen
+							? "max-h-64 opacity-100"
+							: "max-h-0 opacity-0"
 					}`}
 				>
 					<div className="py-4 space-y-1 border-t border-[#171717]">
