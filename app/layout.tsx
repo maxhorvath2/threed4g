@@ -36,10 +36,7 @@ export default function RootLayout({
 			<body
 				className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}
 			>
-				<PostHogProvider
-					clientOptions={{ api_host: "/ingest" }}
-					bootstrapFlags
-				>
+				<PostHogProvider clientOptions={{ api_host: "/ingest" }}>
 					<SmoothScrollProvider>
 						<PostHogPageView />
 						{/* Grain overlay for premium texture */}
