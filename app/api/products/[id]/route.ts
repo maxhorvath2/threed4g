@@ -10,6 +10,28 @@ import type {
 	CreateProductVariantInput,
 } from "@/lib/types/product";
 
+function normalizeStockQuantity(value: unknown): number {
+	const parsed = Number.parseInt(String(value ?? "0"), 10);
+	if (!Number.isFinite(parsed) || parsed < 0) {
+		return 0;
+	}
+	return parsed;
+}
+
+function normalizeVariantRow(variant: Partial<ProductVariant>): ProductVariant {
+	const stockQuantity = normalizeStockQuantity(variant.stock_quantity);
+	return {
+		id: variant.id ?? 0,
+		product_id: variant.product_id ?? 0,
+		name: variant.name ?? "",
+		sku: variant.sku ?? null,
+		price: Number(variant.price ?? 0),
+		sort_order: variant.sort_order ?? 0,
+		stock_quantity: stockQuantity,
+		in_stock: stockQuantity > 0,
+	};
+}
+
 // Helper to fetch images and variants for a product
 async function getProductDetails(productId: number): Promise<{
 	images: ProductImage[];
@@ -22,14 +44,14 @@ async function getProductDetails(productId: number): Promise<{
 
 	return {
 		images: images as ProductImage[],
-		variants: variants as ProductVariant[],
+		variants: (variants as ProductVariant[]).map(normalizeVariantRow),
 	};
 }
 
 // Normalize product to always have images and variants arrays
 function normalizeProduct(
 	product: Product,
-	details: { images: ProductImage[]; variants: ProductVariant[] }
+	details: { images: ProductImage[]; variants: ProductVariant[] },
 ): ProductWithDetails {
 	const images =
 		details.images.length > 0
@@ -59,7 +81,8 @@ function normalizeProduct(
 							sku: null,
 							price: product.price,
 							sort_order: 0,
-							in_stock: true,
+							stock_quantity: 0,
+							in_stock: false,
 						},
 					]
 				: [];
@@ -74,7 +97,7 @@ function normalizeProduct(
 // GET single product
 export async function GET(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
 		const { id } = await params;
@@ -83,7 +106,10 @@ export async function GET(
     `;
 
 		if (result.length === 0) {
-			return NextResponse.json({ error: "Product not found" }, { status: 404 });
+			return NextResponse.json(
+				{ error: "Product not found" },
+				{ status: 404 },
+			);
 		}
 
 		const product = result[0] as Product;
@@ -95,7 +121,7 @@ export async function GET(
 		console.error("Error fetching product:", error);
 		return NextResponse.json(
 			{ error: "Failed to fetch product" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }
@@ -103,12 +129,15 @@ export async function GET(
 // PUT update product (admin only)
 export async function PUT(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
 		const session = await getSession();
 		if (!session) {
-			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+			return NextResponse.json(
+				{ error: "Unauthorized" },
+				{ status: 401 },
+			);
 		}
 
 		const { id } = await params;
@@ -118,7 +147,8 @@ export async function PUT(
 		const hasNewFormat = "images" in body || "variants" in body;
 
 		if (hasNewFormat) {
-			const { name, description, category, featured, images, variants } = body;
+			const { name, description, category, featured, images, variants } =
+				body;
 
 			// Update main product fields
 			let imageUrl: string | undefined;
@@ -126,14 +156,17 @@ export async function PUT(
 
 			if (images && images.length > 0) {
 				const primaryImage =
-					(images as CreateProductImageInput[]).find((img) => img.is_primary) ||
-					images[0];
+					(images as CreateProductImageInput[]).find(
+						(img) => img.is_primary,
+					) || images[0];
 				imageUrl = primaryImage.image_url;
 			}
 
 			if (variants && variants.length > 0) {
 				price = Math.min(
-					...(variants as CreateProductVariantInput[]).map((v) => v.price)
+					...(variants as CreateProductVariantInput[]).map(
+						(v) => v.price,
+					),
 				);
 			}
 
@@ -154,7 +187,7 @@ export async function PUT(
 			if (result.length === 0) {
 				return NextResponse.json(
 					{ error: "Product not found" },
-					{ status: 404 }
+					{ status: 404 },
 				);
 			}
 
@@ -181,9 +214,12 @@ export async function PUT(
 
 				for (let i = 0; i < variants.length; i++) {
 					const variant = variants[i] as CreateProductVariantInput;
+					const stockQuantity = normalizeStockQuantity(
+						variant.stock_quantity,
+					);
 					await sql`
-            INSERT INTO product_variants (product_id, name, sku, price, sort_order, in_stock)
-            VALUES (${product.id}, ${variant.name}, ${variant.sku || null}, ${variant.price}, ${variant.sort_order ?? i}, ${variant.in_stock ?? true})
+            INSERT INTO product_variants (product_id, name, sku, price, sort_order, stock_quantity, in_stock)
+            VALUES (${product.id}, ${variant.name}, ${variant.sku || null}, ${variant.price}, ${variant.sort_order ?? i}, ${stockQuantity}, ${stockQuantity > 0})
           `;
 				}
 			}
@@ -196,7 +232,8 @@ export async function PUT(
 		}
 
 		// Legacy format update
-		const { name, description, image_url, category, featured, price } = body;
+		const { name, description, image_url, category, featured, price } =
+			body;
 
 		const result = await sql`
       UPDATE products
@@ -213,7 +250,10 @@ export async function PUT(
     `;
 
 		if (result.length === 0) {
-			return NextResponse.json({ error: "Product not found" }, { status: 404 });
+			return NextResponse.json(
+				{ error: "Product not found" },
+				{ status: 404 },
+			);
 		}
 
 		return NextResponse.json(result[0]);
@@ -221,7 +261,7 @@ export async function PUT(
 		console.error("Error updating product:", error);
 		return NextResponse.json(
 			{ error: "Failed to update product" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }
@@ -229,12 +269,15 @@ export async function PUT(
 // DELETE product (admin only)
 export async function DELETE(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {
 		const session = await getSession();
 		if (!session) {
-			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+			return NextResponse.json(
+				{ error: "Unauthorized" },
+				{ status: 401 },
+			);
 		}
 
 		const { id } = await params;
@@ -245,7 +288,10 @@ export async function DELETE(
     `;
 
 		if (result.length === 0) {
-			return NextResponse.json({ error: "Product not found" }, { status: 404 });
+			return NextResponse.json(
+				{ error: "Product not found" },
+				{ status: 404 },
+			);
 		}
 
 		return NextResponse.json({ success: true });
@@ -253,7 +299,7 @@ export async function DELETE(
 		console.error("Error deleting product:", error);
 		return NextResponse.json(
 			{ error: "Failed to delete product" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }

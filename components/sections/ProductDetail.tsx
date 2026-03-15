@@ -87,6 +87,15 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
 	const displayPrice = getDisplayPrice();
 	const hasPrice = displayPrice !== null;
+	const totalAvailableStock = product.variants.reduce(
+		(total, variant) => total + Number(variant.stock_quantity ?? 0),
+		0,
+	);
+	const activeStockQuantity = selectedVariant
+		? Number(selectedVariant.stock_quantity ?? 0)
+		: product.variants.length === 1
+			? Number(product.variants[0].stock_quantity ?? 0)
+			: totalAvailableStock;
 
 	return (
 		<section className="pt-32 pb-20 px-6">
@@ -265,12 +274,20 @@ export function ProductDetail({ product }: ProductDetailProps) {
 												onClick={() =>
 													setSelectedVariant(variant)
 												}
-												disabled={!variant.in_stock}
+												disabled={
+													Number(
+														variant.stock_quantity ??
+															0,
+													) <= 0
+												}
 												className={`px-4 py-3 rounded-lg border transition-all ${
 													selectedVariant?.id ===
 													variant.id
 														? "border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]"
-														: variant.in_stock
+														: Number(
+																	variant.stock_quantity ??
+																		0,
+															  ) > 0
 															? "border-[#262626] hover:border-[#404040] text-[#fafafa]"
 															: "border-[#262626] text-[#525252] cursor-not-allowed opacity-50"
 												}`}
@@ -279,10 +296,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
 													{variant.name}
 												</div>
 												<div className="text-xs mt-1 opacity-75">
-													$
 													{Number(
-														variant.price,
-													).toFixed(2)}
+														variant.stock_quantity ??
+															0,
+													) > 0
+														? `$${Number(variant.price).toFixed(2)}`
+														: "Sold Out"}
 												</div>
 											</button>
 										))}
@@ -349,6 +368,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 													}
 												: undefined
 									}
+									stockQuantity={activeStockQuantity}
 									size="lg"
 									className="w-full sm:w-auto"
 									showPrice={true}

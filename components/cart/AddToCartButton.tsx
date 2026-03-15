@@ -18,12 +18,14 @@ interface AddToCartButtonProps extends Omit<ButtonProps, "onClick"> {
 		name: string;
 		price: number;
 	};
+	stockQuantity?: number;
 	showPrice?: boolean;
 }
 
 export function AddToCartButton({
 	product,
 	selectedVariant,
+	stockQuantity,
 	showPrice = true,
 	className,
 	size = "md",
@@ -37,9 +39,11 @@ export function AddToCartButton({
 
 	// Use variant price if available, otherwise product price
 	const price = selectedVariant?.price ?? product.price;
+	const normalizedStock = Number(stockQuantity ?? 0);
+	const isSoldOut = Number.isFinite(normalizedStock) && normalizedStock <= 0;
 
 	const handleClick = () => {
-		if (price === null || price === undefined) return;
+		if (price === null || price === undefined || isSoldOut) return;
 
 		addItem({
 			productId: product.id,
@@ -48,6 +52,7 @@ export function AddToCartButton({
 			name: product.name,
 			price: Number(price),
 			image_url: product.image_url,
+			maxQuantity: normalizedStock,
 		});
 
 		posthog?.capture("product_added_to_cart", {
@@ -76,7 +81,7 @@ export function AddToCartButton({
 	};
 
 	const hasPrice = price !== null && price !== undefined;
-	const isDisabled = disabled || !hasPrice;
+	const isDisabled = disabled || !hasPrice || isSoldOut;
 
 	return (
 		<Button
@@ -88,7 +93,9 @@ export function AddToCartButton({
 			disabled={isDisabled}
 			{...props}
 		>
-			{hasPrice ? (
+			{isSoldOut ? (
+				"Sold Out"
+			) : hasPrice ? (
 				<>
 					<svg
 						className="w-4 h-4"

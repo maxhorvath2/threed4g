@@ -65,7 +65,8 @@ async function getProduct(id: string): Promise<ProductWithDetails | null> {
 								sku: null,
 								price: product.price,
 								sort_order: 0,
-								in_stock: true,
+								stock_quantity: 0,
+								in_stock: false,
 							},
 						]
 					: [];

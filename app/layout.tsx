@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SmoothScrollProvider } from "@/components/animations/SmoothScroll";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { CartStockSync } from "@/components/cart/CartStockSync";
 import "./globals.css";
 import { PostHogPageView, PostHogProvider } from "@posthog/next";
 
@@ -47,6 +48,7 @@ export default function RootLayout({
 						{children}
 
 						{/* Cart drawer - portal renders here */}
+						<CartStockSync />
 						<CartDrawer />
 					</SmoothScrollProvider>
 					<Analytics />

@@ -11,6 +11,7 @@ import type {
 	CreateProductVariantInput,
 } from "@/lib/types/product";
 import type { Link } from "@/lib/types/link";
+import type { OrderWithItems } from "@/lib/types/order";
 
 interface Admin {
 	id: number;
@@ -32,6 +33,7 @@ interface VariantFormItem {
 	name: string;
 	price: string;
 	sku: string;
+	stock_quantity: string;
 }
 
 export default function AdminDashboard() {
@@ -39,8 +41,11 @@ export default function AdminDashboard() {
 	const [products, setProducts] = useState<ProductWithDetails[]>([]);
 	const [admins, setAdmins] = useState<Admin[]>([]);
 	const [links, setLinks] = useState<Link[]>([]);
+	const [orders, setOrders] = useState<OrderWithItems[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [activeTab, setActiveTab] = useState<"products" | "admins" | "links">("products");
+	const [activeTab, setActiveTab] = useState<
+		"products" | "admins" | "links" | "orders"
+	>("products");
 	const [showProductForm, setShowProductForm] = useState(false);
 	const [showAdminForm, setShowAdminForm] = useState(false);
 	const [editingProduct, setEditingProduct] =
@@ -58,7 +63,9 @@ export default function AdminDashboard() {
 	const [productImages, setProductImages] = useState<ImageFormItem[]>([]);
 
 	// Multiple variants state
-	const [productVariants, setProductVariants] = useState<VariantFormItem[]>([]);
+	const [productVariants, setProductVariants] = useState<VariantFormItem[]>(
+		[],
+	);
 
 	// Admin form state
 	const [adminUsername, setAdminUsername] = useState("");
@@ -80,11 +87,13 @@ export default function AdminDashboard() {
 
 	const fetchData = async () => {
 		try {
-			const [productsRes, adminsRes, linksRes] = await Promise.all([
-				fetch("/api/products"),
-				fetch("/api/admin"),
-				fetch("/api/links"),
-			]);
+			const [productsRes, adminsRes, linksRes, ordersRes] =
+				await Promise.all([
+					fetch("/api/products"),
+					fetch("/api/admin"),
+					fetch("/api/links"),
+					fetch("/api/orders"),
+				]);
 
 			if (productsRes.ok) {
 				const productsData = await productsRes.json();
@@ -99,6 +108,11 @@ export default function AdminDashboard() {
 			if (linksRes.ok) {
 				const linksData = await linksRes.json();
 				setLinks(linksData);
+			}
+
+			if (ordersRes.ok) {
+				const ordersData = await ordersRes.json();
+				setOrders(ordersData);
 			}
 		} catch (error) {
 			console.error("Error fetching data:", error);
@@ -142,7 +156,9 @@ export default function AdminDashboard() {
 			return data.url;
 		} catch (error) {
 			const errorMessage =
-				error instanceof Error ? error.message : "Failed to upload image";
+				error instanceof Error
+					? error.message
+					: "Failed to upload image";
 			setUploadError(errorMessage);
 			return null;
 		} finally {
@@ -174,7 +190,10 @@ export default function AdminDashboard() {
 	};
 
 	const addVariant = () => {
-		setProductVariants([...productVariants, { name: "", price: "", sku: "" }]);
+		setProductVariants([
+			...productVariants,
+			{ name: "", price: "", sku: "", stock_quantity: "0" },
+		]);
 	};
 
 	const removeVariant = (index: number) => {
@@ -208,7 +227,21 @@ export default function AdminDashboard() {
 			(v) => v.name.trim() !== "" && v.price.trim() !== "",
 		);
 		if (validVariants.length === 0) {
-			setUploadError("Please add at least one variant with name and price");
+			setUploadError(
+				"Please add at least one variant with name and price",
+			);
+			return;
+		}
+
+		const hasInvalidStock = validVariants.some((v) => {
+			const stock = Number.parseInt(v.stock_quantity, 10);
+			return Number.isNaN(stock) || stock < 0;
+		});
+
+		if (hasInvalidStock) {
+			setUploadError(
+				"Stock quantity must be a whole number of 0 or more",
+			);
 			return;
 		}
 
@@ -240,6 +273,7 @@ export default function AdminDashboard() {
 					price: parseFloat(v.price),
 					sku: v.sku || undefined,
 					sort_order: index,
+					stock_quantity: Number.parseInt(v.stock_quantity, 10),
 				}),
 			);
 
@@ -287,7 +321,9 @@ export default function AdminDashboard() {
 			resetAdminForm();
 		} catch (error) {
 			const message =
-				error instanceof Error ? error.message : "Failed to create admin";
+				error instanceof Error
+					? error.message
+					: "Failed to create admin";
 			alert(message);
 		}
 	};
@@ -296,7 +332,9 @@ export default function AdminDashboard() {
 		if (!confirm("Are you sure you want to delete this product?")) return;
 
 		try {
-			const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+			const res = await fetch(`/api/products/${id}`, {
+				method: "DELETE",
+			});
 			if (!res.ok) throw new Error("Failed to delete product");
 			await fetchData();
 		} catch (error) {
@@ -317,7 +355,9 @@ export default function AdminDashboard() {
 			await fetchData();
 		} catch (error) {
 			const message =
-				error instanceof Error ? error.message : "Failed to delete admin";
+				error instanceof Error
+					? error.message
+					: "Failed to delete admin";
 			alert(message);
 		}
 	};
@@ -330,12 +370,14 @@ export default function AdminDashboard() {
 		setProductFeatured(product.featured);
 
 		// Load images
-		const images: ImageFormItem[] = product.images.map((img: ProductImage) => ({
-			id: img.id,
-			image_url: img.image_url,
-			alt_text: img.alt_text || "",
-			is_primary: img.is_primary,
-		}));
+		const images: ImageFormItem[] = product.images.map(
+			(img: ProductImage) => ({
+				id: img.id,
+				image_url: img.image_url,
+				alt_text: img.alt_text || "",
+				is_primary: img.is_primary,
+			}),
+		);
 		setProductImages(images.length > 0 ? images : []);
 
 		// Load variants
@@ -345,6 +387,7 @@ export default function AdminDashboard() {
 				name: v.name,
 				price: v.price.toString(),
 				sku: v.sku || "",
+				stock_quantity: String(v.stock_quantity ?? 0),
 			}),
 		);
 		setProductVariants(variants.length > 0 ? variants : []);
@@ -386,7 +429,10 @@ export default function AdminDashboard() {
 					url: linkUrl,
 					promo_code: linkPromoCode || null,
 					description: linkDescription || null,
-					sort_order: linkSortOrder.trim() !== "" ? parseInt(linkSortOrder) : undefined,
+					sort_order:
+						linkSortOrder.trim() !== ""
+							? parseInt(linkSortOrder)
+							: undefined,
 					active: linkActive,
 				}),
 			});
@@ -458,6 +504,16 @@ export default function AdminDashboard() {
 		return `From $${minPrice.toFixed(2)}`;
 	};
 
+	const getTotalStock = (product: ProductWithDetails) => {
+		if (!product.variants || product.variants.length === 0) {
+			return 0;
+		}
+		return product.variants.reduce(
+			(total, variant) => total + Number(variant.stock_quantity ?? 0),
+			0,
+		);
+	};
+
 	if (loading) {
 		return (
 			<div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -517,6 +573,16 @@ export default function AdminDashboard() {
 					>
 						Links
 					</button>
+					<button
+						onClick={() => setActiveTab("orders")}
+						className={`px-6 py-3 font-medium transition-colors ${
+							activeTab === "orders"
+								? "text-[#22c55e] border-b-2 border-[#22c55e]"
+								: "text-[#a3a3a3] hover:text-[#fafafa]"
+						}`}
+					>
+						Orders
+					</button>
 				</div>
 
 				{/* Products Tab */}
@@ -541,9 +607,14 @@ export default function AdminDashboard() {
 						{showProductForm && (
 							<div className="mb-8 border border-[#262626] rounded-lg p-6 bg-[#111111]">
 								<h3 className="text-xl font-semibold text-[#fafafa] mb-4">
-									{editingProduct ? "Edit Product" : "Add New Product"}
+									{editingProduct
+										? "Edit Product"
+										: "Add New Product"}
 								</h3>
-								<form onSubmit={handleProductSubmit} className="space-y-6">
+								<form
+									onSubmit={handleProductSubmit}
+									className="space-y-6"
+								>
 									{/* Basic Info */}
 									<div>
 										<label className="block text-sm font-medium text-[#fafafa] mb-2">
@@ -552,7 +623,9 @@ export default function AdminDashboard() {
 										<input
 											type="text"
 											value={productName}
-											onChange={(e) => setProductName(e.target.value)}
+											onChange={(e) =>
+												setProductName(e.target.value)
+											}
 											required
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
 										/>
@@ -564,7 +637,11 @@ export default function AdminDashboard() {
 										</label>
 										<textarea
 											value={productDescription}
-											onChange={(e) => setProductDescription(e.target.value)}
+											onChange={(e) =>
+												setProductDescription(
+													e.target.value,
+												)
+											}
 											rows={3}
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
 										/>
@@ -578,7 +655,11 @@ export default function AdminDashboard() {
 											<input
 												type="text"
 												value={productCategory}
-												onChange={(e) => setProductCategory(e.target.value)}
+												onChange={(e) =>
+													setProductCategory(
+														e.target.value,
+													)
+												}
 												className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
 											/>
 										</div>
@@ -587,7 +668,11 @@ export default function AdminDashboard() {
 												type="checkbox"
 												id="featured"
 												checked={productFeatured}
-												onChange={(e) => setProductFeatured(e.target.checked)}
+												onChange={(e) =>
+													setProductFeatured(
+														e.target.checked,
+													)
+												}
 												className="w-4 h-4 text-[#22c55e] bg-[#1a1a1a] border-[#262626] rounded focus:ring-[#22c55e]"
 											/>
 											<label
@@ -616,7 +701,8 @@ export default function AdminDashboard() {
 
 										{productImages.length === 0 && (
 											<p className="text-[#737373] text-sm">
-												No images added yet. Click &quot;Add Image&quot; to add
+												No images added yet. Click
+												&quot;Add Image&quot; to add
 												product images.
 											</p>
 										)}
@@ -632,10 +718,17 @@ export default function AdminDashboard() {
 															<input
 																type="file"
 																accept="image/*"
-																onChange={async (e) => {
-																	const file = e.target.files?.[0];
+																onChange={async (
+																	e,
+																) => {
+																	const file =
+																		e.target
+																			.files?.[0];
 																	if (file) {
-																		await handleImageUpload(file, index);
+																		await handleImageUpload(
+																			file,
+																			index,
+																		);
 																	}
 																}}
 																className="flex-1 px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
@@ -645,14 +738,32 @@ export default function AdminDashboard() {
 															<input
 																type="text"
 																placeholder="Image URL"
-																value={img.image_url}
-																onChange={(e) => {
-																	setProductImages((prev) =>
-																		prev.map((i, idx) =>
-																			idx === index
-																				? { ...i, image_url: e.target.value }
-																				: i,
-																		),
+																value={
+																	img.image_url
+																}
+																onChange={(
+																	e,
+																) => {
+																	setProductImages(
+																		(
+																			prev,
+																		) =>
+																			prev.map(
+																				(
+																					i,
+																					idx,
+																				) =>
+																					idx ===
+																					index
+																						? {
+																								...i,
+																								image_url:
+																									e
+																										.target
+																										.value,
+																							}
+																						: i,
+																			),
 																	);
 																}}
 																className="w-full px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
@@ -663,12 +774,24 @@ export default function AdminDashboard() {
 															placeholder="Alt text (optional)"
 															value={img.alt_text}
 															onChange={(e) => {
-																setProductImages((prev) =>
-																	prev.map((i, idx) =>
-																		idx === index
-																			? { ...i, alt_text: e.target.value }
-																			: i,
-																	),
+																setProductImages(
+																	(prev) =>
+																		prev.map(
+																			(
+																				i,
+																				idx,
+																			) =>
+																				idx ===
+																				index
+																					? {
+																							...i,
+																							alt_text:
+																								e
+																									.target
+																									.value,
+																						}
+																					: i,
+																		),
 																);
 															}}
 															className="w-full px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
@@ -676,18 +799,28 @@ export default function AdminDashboard() {
 														<div className="flex items-center gap-4">
 															<button
 																type="button"
-																onClick={() => setPrimaryImage(index)}
+																onClick={() =>
+																	setPrimaryImage(
+																		index,
+																	)
+																}
 																className={`px-3 py-1 text-xs rounded ${
 																	img.is_primary
 																		? "bg-[#22c55e] text-[#0a0a0a]"
 																		: "border border-[#262626] text-[#a3a3a3] hover:text-[#fafafa]"
 																}`}
 															>
-																{img.is_primary ? "Primary" : "Set Primary"}
+																{img.is_primary
+																	? "Primary"
+																	: "Set Primary"}
 															</button>
 															<button
 																type="button"
-																onClick={() => removeImage(index)}
+																onClick={() =>
+																	removeImage(
+																		index,
+																	)
+																}
 																className="px-3 py-1 text-xs border border-[#7f1d1d] text-[#fca5a5] rounded hover:bg-[#7f1d1d]/20"
 															>
 																Remove
@@ -697,8 +830,13 @@ export default function AdminDashboard() {
 													{img.image_url && (
 														<div className="relative w-24 h-24 rounded overflow-hidden border border-[#262626] shrink-0">
 															<Image
-																src={img.image_url}
-																alt={img.alt_text || "Preview"}
+																src={
+																	img.image_url
+																}
+																alt={
+																	img.alt_text ||
+																	"Preview"
+																}
 																fill
 																className="object-cover"
 															/>
@@ -737,61 +875,109 @@ export default function AdminDashboard() {
 
 										{productVariants.length === 0 && (
 											<p className="text-[#737373] text-sm">
-												No variants added yet. Add variants for different sizes
-												or options with their prices.
+												No variants added yet. Add
+												variants for different sizes or
+												options with their prices.
 											</p>
 										)}
 
 										<div className="space-y-3">
-											{productVariants.map((variant, index) => (
-												<div
-													key={index}
-													className="flex gap-3 items-center p-3 border border-[#262626] rounded-lg bg-[#111111]"
-												>
-													<div className="flex-1">
-														<input
-															type="text"
-															placeholder="Variant name (e.g., Small, 6-inch)"
-															value={variant.name}
-															onChange={(e) =>
-																updateVariant(index, "name", e.target.value)
-															}
-															className="w-full px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
-														/>
-													</div>
-													<div className="w-32">
-														<input
-															type="number"
-															step="0.01"
-															min="0"
-															placeholder="Price"
-															value={variant.price}
-															onChange={(e) =>
-																updateVariant(index, "price", e.target.value)
-															}
-															className="w-full px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
-														/>
-													</div>
-													<div className="w-32">
-														<input
-															type="text"
-															placeholder="SKU (optional)"
-															value={variant.sku}
-															onChange={(e) =>
-																updateVariant(index, "sku", e.target.value)
-															}
-															className="w-full px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
-														/>
-													</div>
-													<button
-														type="button"
-														onClick={() => removeVariant(index)}
-														className="px-3 py-2 text-sm border border-[#7f1d1d] text-[#fca5a5] rounded hover:bg-[#7f1d1d]/20"
+											{productVariants.map(
+												(variant, index) => (
+													<div
+														key={index}
+														className="flex gap-3 items-center p-3 border border-[#262626] rounded-lg bg-[#111111]"
 													>
-														Remove
-													</button>
-												</div>
-											))}
+														<div className="flex-1">
+															<input
+																type="text"
+																placeholder="Variant name (e.g., Small, 6-inch)"
+																value={
+																	variant.name
+																}
+																onChange={(e) =>
+																	updateVariant(
+																		index,
+																		"name",
+																		e.target
+																			.value,
+																	)
+																}
+																className="w-full px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
+															/>
+														</div>
+														<div className="w-32">
+															<input
+																type="number"
+																step="0.01"
+																min="0"
+																placeholder="Price"
+																value={
+																	variant.price
+																}
+																onChange={(e) =>
+																	updateVariant(
+																		index,
+																		"price",
+																		e.target
+																			.value,
+																	)
+																}
+																className="w-full px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
+															/>
+														</div>
+														<div className="w-32">
+															<input
+																type="number"
+																step="1"
+																min="0"
+																placeholder="Stock"
+																value={
+																	variant.stock_quantity
+																}
+																onChange={(e) =>
+																	updateVariant(
+																		index,
+																		"stock_quantity",
+																		e.target
+																			.value,
+																	)
+																}
+																className="w-full px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
+															/>
+														</div>
+														<div className="w-32">
+															<input
+																type="text"
+																placeholder="SKU (optional)"
+																value={
+																	variant.sku
+																}
+																onChange={(e) =>
+																	updateVariant(
+																		index,
+																		"sku",
+																		e.target
+																			.value,
+																	)
+																}
+																className="w-full px-3 py-2 text-sm bg-[#1a1a1a] border border-[#262626] rounded text-[#fafafa] focus:outline-none focus:border-[#22c55e]"
+															/>
+														</div>
+														<button
+															type="button"
+															onClick={() =>
+																removeVariant(
+																	index,
+																)
+															}
+															className="px-3 py-2 text-sm border border-[#7f1d1d] text-[#fca5a5] rounded hover:bg-[#7f1d1d]/20"
+														>
+															Remove
+														</button>
+													</div>
+												),
+											)}
 										</div>
 									</div>
 
@@ -800,7 +986,9 @@ export default function AdminDashboard() {
 											type="submit"
 											className="px-6 py-2 bg-[#22c55e] text-[#0a0a0a] font-medium rounded-lg hover:bg-[#16a34a] transition-colors"
 										>
-											{editingProduct ? "Update" : "Create"}
+											{editingProduct
+												? "Update"
+												: "Create"}
 										</button>
 										<button
 											type="button"
@@ -823,16 +1011,22 @@ export default function AdminDashboard() {
 								>
 									<div className="relative w-full h-48">
 										<Image
-											src={product.images?.[0]?.image_url || product.image_url}
+											src={
+												product.images?.[0]
+													?.image_url ||
+												product.image_url
+											}
 											alt={product.name}
 											fill
 											className="object-cover"
 										/>
-										{product.images && product.images.length > 1 && (
-											<div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 rounded text-xs text-white">
-												+{product.images.length - 1} more
-											</div>
-										)}
+										{product.images &&
+											product.images.length > 1 && (
+												<div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 rounded text-xs text-white">
+													+{product.images.length - 1}{" "}
+													more
+												</div>
+											)}
 									</div>
 									<div className="p-4">
 										<div className="flex justify-between items-start mb-2">
@@ -861,28 +1055,58 @@ export default function AdminDashboard() {
 													Featured
 												</span>
 											)}
-											{product.variants && product.variants.length > 0 && (
-												<span className="px-2 py-1 text-xs bg-[#1a1a1a] text-[#a3a3a3] rounded border border-[#262626]">
-													{product.variants.length} variant
-													{product.variants.length > 1 ? "s" : ""}
-												</span>
-											)}
+											<span
+												className={`px-2 py-1 text-xs rounded border ${
+													getTotalStock(product) > 0
+														? "bg-[#1a1a1a] text-[#22c55e] border-[#262626]"
+														: "bg-[#1a1a1a] text-[#fca5a5] border-[#7f1d1d]"
+												}`}
+											>
+												{getTotalStock(product)} in
+												stock
+											</span>
+											{product.variants &&
+												product.variants.length > 0 && (
+													<span className="px-2 py-1 text-xs bg-[#1a1a1a] text-[#a3a3a3] rounded border border-[#262626]">
+														{
+															product.variants
+																.length
+														}{" "}
+														variant
+														{product.variants
+															.length > 1
+															? "s"
+															: ""}
+													</span>
+												)}
 										</div>
 										{/* Show variant names */}
-										{product.variants && product.variants.length > 0 && (
-											<div className="text-xs text-[#737373] mb-2">
-												{product.variants.map((v) => v.name).join(", ")}
-											</div>
-										)}
+										{product.variants &&
+											product.variants.length > 0 && (
+												<div className="text-xs text-[#737373] mb-2">
+													{product.variants
+														.map(
+															(v) =>
+																`${v.name} (${v.stock_quantity ?? 0})`,
+														)
+														.join(", ")}
+												</div>
+											)}
 										<div className="flex gap-2 mt-4">
 											<button
-												onClick={() => handleEditProduct(product)}
+												onClick={() =>
+													handleEditProduct(product)
+												}
 												className="flex-1 px-3 py-1.5 text-sm border border-[#262626] text-[#fafafa] rounded hover:bg-[#1a1a1a] transition-colors"
 											>
 												Edit
 											</button>
 											<button
-												onClick={() => handleDeleteProduct(product.id)}
+												onClick={() =>
+													handleDeleteProduct(
+														product.id,
+													)
+												}
 												className="flex-1 px-3 py-1.5 text-sm border border-[#7f1d1d] text-[#fca5a5] rounded hover:bg-[#7f1d1d]/20 transition-colors"
 											>
 												Delete
@@ -899,7 +1123,9 @@ export default function AdminDashboard() {
 				{activeTab === "admins" && (
 					<div>
 						<div className="flex justify-between items-center mb-6">
-							<h2 className="text-2xl font-semibold text-[#fafafa]">Admins</h2>
+							<h2 className="text-2xl font-semibold text-[#fafafa]">
+								Admins
+							</h2>
 							<button
 								onClick={() => setShowAdminForm(true)}
 								className="px-4 py-2 bg-[#22c55e] text-[#0a0a0a] font-medium rounded-lg hover:bg-[#16a34a] transition-colors"
@@ -914,7 +1140,10 @@ export default function AdminDashboard() {
 								<h3 className="text-xl font-semibold text-[#fafafa] mb-4">
 									Add New Admin
 								</h3>
-								<form onSubmit={handleAdminSubmit} className="space-y-4">
+								<form
+									onSubmit={handleAdminSubmit}
+									className="space-y-4"
+								>
 									<div>
 										<label className="block text-sm font-medium text-[#fafafa] mb-2">
 											Username *
@@ -922,7 +1151,9 @@ export default function AdminDashboard() {
 										<input
 											type="text"
 											value={adminUsername}
-											onChange={(e) => setAdminUsername(e.target.value)}
+											onChange={(e) =>
+												setAdminUsername(e.target.value)
+											}
 											required
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
 										/>
@@ -935,7 +1166,9 @@ export default function AdminDashboard() {
 										<input
 											type="password"
 											value={adminPassword}
-											onChange={(e) => setAdminPassword(e.target.value)}
+											onChange={(e) =>
+												setAdminPassword(e.target.value)
+											}
 											required
 											minLength={6}
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
@@ -973,11 +1206,16 @@ export default function AdminDashboard() {
 											{admin.username}
 										</p>
 										<p className="text-[#737373] text-sm">
-											Created: {new Date(admin.created_at).toLocaleDateString()}
+											Created:{" "}
+											{new Date(
+												admin.created_at,
+											).toLocaleDateString()}
 										</p>
 									</div>
 									<button
-										onClick={() => handleDeleteAdmin(admin.id)}
+										onClick={() =>
+											handleDeleteAdmin(admin.id)
+										}
 										className="px-4 py-2 border border-[#7f1d1d] text-[#fca5a5] rounded-lg hover:bg-[#7f1d1d]/20 transition-colors"
 									>
 										Delete
@@ -992,7 +1230,9 @@ export default function AdminDashboard() {
 				{activeTab === "links" && (
 					<div>
 						<div className="flex justify-between items-center mb-6">
-							<h2 className="text-2xl font-semibold text-[#fafafa]">Links</h2>
+							<h2 className="text-2xl font-semibold text-[#fafafa]">
+								Links
+							</h2>
 							<button
 								onClick={() => {
 									resetLinkForm();
@@ -1010,7 +1250,10 @@ export default function AdminDashboard() {
 								<h3 className="text-xl font-semibold text-[#fafafa] mb-4">
 									{editingLink ? "Edit Link" : "Add New Link"}
 								</h3>
-								<form onSubmit={handleLinkSubmit} className="space-y-4">
+								<form
+									onSubmit={handleLinkSubmit}
+									className="space-y-4"
+								>
 									<div>
 										<label className="block text-sm font-medium text-[#fafafa] mb-2">
 											Title *
@@ -1018,7 +1261,9 @@ export default function AdminDashboard() {
 										<input
 											type="text"
 											value={linkTitle}
-											onChange={(e) => setLinkTitle(e.target.value)}
+											onChange={(e) =>
+												setLinkTitle(e.target.value)
+											}
 											required
 											placeholder="e.g., Visit our Instagram"
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
@@ -1032,7 +1277,9 @@ export default function AdminDashboard() {
 										<input
 											type="url"
 											value={linkUrl}
-											onChange={(e) => setLinkUrl(e.target.value)}
+											onChange={(e) =>
+												setLinkUrl(e.target.value)
+											}
 											required
 											placeholder="https://example.com"
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
@@ -1046,12 +1293,16 @@ export default function AdminDashboard() {
 										<input
 											type="text"
 											value={linkPromoCode}
-											onChange={(e) => setLinkPromoCode(e.target.value)}
+											onChange={(e) =>
+												setLinkPromoCode(e.target.value)
+											}
 											placeholder="e.g., SAVE20"
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
 										/>
 										<p className="text-[#737373] text-xs mt-1">
-											If set, users will see a modal to copy the code before visiting the site
+											If set, users will see a modal to
+											copy the code before visiting the
+											site
 										</p>
 									</div>
 
@@ -1061,7 +1312,11 @@ export default function AdminDashboard() {
 										</label>
 										<textarea
 											value={linkDescription}
-											onChange={(e) => setLinkDescription(e.target.value)}
+											onChange={(e) =>
+												setLinkDescription(
+													e.target.value,
+												)
+											}
 											rows={2}
 											placeholder="Brief description of the link"
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
@@ -1076,12 +1331,17 @@ export default function AdminDashboard() {
 											<input
 												type="number"
 												value={linkSortOrder}
-												onChange={(e) => setLinkSortOrder(e.target.value)}
+												onChange={(e) =>
+													setLinkSortOrder(
+														e.target.value,
+													)
+												}
 												placeholder="Auto"
 												className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
 											/>
 											<p className="text-[#737373] text-xs mt-1">
-												Leave empty to auto-assign. Lower numbers appear first.
+												Leave empty to auto-assign.
+												Lower numbers appear first.
 											</p>
 										</div>
 										<div className="flex items-center pt-8">
@@ -1089,7 +1349,11 @@ export default function AdminDashboard() {
 												type="checkbox"
 												id="linkActive"
 												checked={linkActive}
-												onChange={(e) => setLinkActive(e.target.checked)}
+												onChange={(e) =>
+													setLinkActive(
+														e.target.checked,
+													)
+												}
 												className="w-4 h-4 text-[#22c55e] bg-[#1a1a1a] border-[#262626] rounded focus:ring-[#22c55e]"
 											/>
 											<label
@@ -1124,7 +1388,8 @@ export default function AdminDashboard() {
 						<div className="space-y-4">
 							{links.length === 0 && (
 								<p className="text-[#737373] text-center py-8">
-									No links added yet. Click &quot;Add Link&quot; to create your first link.
+									No links added yet. Click &quot;Add
+									Link&quot; to create your first link.
 								</p>
 							)}
 							{links.map((link) => (
@@ -1168,7 +1433,9 @@ export default function AdminDashboard() {
 											Edit
 										</button>
 										<button
-											onClick={() => handleDeleteLink(link.id)}
+											onClick={() =>
+												handleDeleteLink(link.id)
+											}
 											className="px-4 py-2 border border-[#7f1d1d] text-[#fca5a5] rounded-lg hover:bg-[#7f1d1d]/20 transition-colors"
 										>
 											Delete
@@ -1177,6 +1444,88 @@ export default function AdminDashboard() {
 								</div>
 							))}
 						</div>
+					</div>
+				)}
+
+				{/* Orders Tab */}
+				{activeTab === "orders" && (
+					<div>
+						<div className="flex justify-between items-center mb-6">
+							<h2 className="text-2xl font-semibold text-[#fafafa]">
+								Orders
+							</h2>
+						</div>
+
+						{orders.length === 0 ? (
+							<p className="text-[#737373] text-center py-8">
+								No orders yet.
+							</p>
+						) : (
+							<div className="space-y-4">
+								{orders.map((order) => (
+									<div
+										key={order.id}
+										className="border border-[#262626] rounded-lg bg-[#111111] p-4"
+									>
+										<div className="flex flex-wrap justify-between items-start gap-3 mb-3">
+											<div>
+												<p className="text-[#fafafa] font-semibold">
+													Order #{order.id}
+												</p>
+												<p className="text-[#a3a3a3] text-sm">
+													{order.customer_name} (
+													{order.customer_email})
+												</p>
+												<p className="text-[#737373] text-xs mt-1">
+													{new Date(
+														order.created_at,
+													).toLocaleString()}
+												</p>
+											</div>
+											<div className="text-right">
+												<p className="text-[#22c55e] font-bold text-lg">
+													$
+													{Number(
+														order.subtotal,
+													).toFixed(2)}
+												</p>
+												<p className="text-xs text-[#a3a3a3] uppercase">
+													{order.currency}
+												</p>
+												<div className="mt-1 text-xs text-[#a3a3a3]">
+													Status: {order.status}
+												</div>
+												<div className="text-xs text-[#a3a3a3]">
+													Payment:{" "}
+													{order.payment_status}
+												</div>
+											</div>
+										</div>
+
+										<div className="text-sm text-[#a3a3a3] space-y-1 border-t border-[#262626] pt-3">
+											{order.items.map((item) => (
+												<div
+													key={item.id}
+													className="flex justify-between gap-3"
+												>
+													<span>
+														{item.product_name} -{" "}
+														{item.variant_name} x{" "}
+														{item.quantity}
+													</span>
+													<span>
+														$
+														{Number(
+															item.line_total,
+														).toFixed(2)}
+													</span>
+												</div>
+											))}
+										</div>
+									</div>
+								))}
+							</div>
+						)}
 					</div>
 				)}
 			</div>

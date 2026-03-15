@@ -17,6 +17,7 @@ export interface ProductVariant {
 	price: number;
 	sort_order: number;
 	in_stock: boolean;
+	stock_quantity: number;
 }
 
 // Base product (database row)
@@ -48,6 +49,7 @@ export interface CartItem {
 	price: number;
 	image_url: string;
 	quantity: number;
+	maxQuantity: number | null;
 }
 
 // Input types for creating/updating
@@ -64,6 +66,7 @@ export interface CreateProductVariantInput {
 	sku?: string;
 	sort_order?: number;
 	in_stock?: boolean;
+	stock_quantity?: number;
 }
 
 export interface CreateProductInput {

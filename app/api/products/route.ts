@@ -9,10 +9,34 @@ import type {
 	CreateProductInput,
 } from "@/lib/types/product";
 
+function normalizeStockQuantity(value: unknown): number {
+	const parsed = Number.parseInt(String(value ?? "0"), 10);
+	if (!Number.isFinite(parsed) || parsed < 0) {
+		return 0;
+	}
+	return parsed;
+}
+
+function normalizeVariantRow(variant: Partial<ProductVariant>): ProductVariant {
+	const stockQuantity = normalizeStockQuantity(variant.stock_quantity);
+	return {
+		id: variant.id ?? 0,
+		product_id: variant.product_id ?? 0,
+		name: variant.name ?? "",
+		sku: variant.sku ?? null,
+		price: Number(variant.price ?? 0),
+		sort_order: variant.sort_order ?? 0,
+		stock_quantity: stockQuantity,
+		in_stock: stockQuantity > 0,
+	};
+}
+
 // Helper to fetch images and variants for products
 async function getProductDetails(
-	productIds: number[]
-): Promise<Map<number, { images: ProductImage[]; variants: ProductVariant[] }>> {
+	productIds: number[],
+): Promise<
+	Map<number, { images: ProductImage[]; variants: ProductVariant[] }>
+> {
 	if (productIds.length === 0) {
 		return new Map();
 	}
@@ -36,7 +60,9 @@ async function getProductDetails(
 	}
 
 	for (const variant of variants) {
-		detailsMap.get(variant.product_id)?.variants.push(variant as ProductVariant);
+		detailsMap
+			.get(variant.product_id)
+			?.variants.push(normalizeVariantRow(variant as ProductVariant));
 	}
 
 	return detailsMap;
@@ -45,7 +71,7 @@ async function getProductDetails(
 // Normalize product to always have images and variants arrays
 function normalizeProduct(
 	product: Product,
-	details?: { images: ProductImage[]; variants: ProductVariant[] }
+	details?: { images: ProductImage[]; variants: ProductVariant[] },
 ): ProductWithDetails {
 	const images =
 		details?.images && details.images.length > 0
@@ -75,7 +101,8 @@ function normalizeProduct(
 							sku: null,
 							price: product.price,
 							sort_order: 0,
-							in_stock: true,
+							stock_quantity: 0,
+							in_stock: false,
 						},
 					]
 				: [];
@@ -116,8 +143,8 @@ export async function GET(request: NextRequest) {
 		const productIds = products.map((p) => p.id);
 		const detailsMap = await getProductDetails(productIds);
 
-		const productsWithDetails: ProductWithDetails[] = products.map((product) =>
-			normalizeProduct(product, detailsMap.get(product.id))
+		const productsWithDetails: ProductWithDetails[] = products.map(
+			(product) => normalizeProduct(product, detailsMap.get(product.id)),
 		);
 
 		return NextResponse.json(productsWithDetails);
@@ -125,7 +152,7 @@ export async function GET(request: NextRequest) {
 		console.error("Error fetching products:", error);
 		return NextResponse.json(
 			{ error: "Failed to fetch products" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }
@@ -135,7 +162,10 @@ export async function POST(request: NextRequest) {
 	try {
 		const session = await getSession();
 		if (!session) {
-			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+			return NextResponse.json(
+				{ error: "Unauthorized" },
+				{ status: 401 },
+			);
 		}
 
 		const body = await request.json();
@@ -145,12 +175,13 @@ export async function POST(request: NextRequest) {
 
 		if (isLegacyFormat) {
 			// Legacy format: { name, description, image_url, category, featured, price }
-			const { name, description, image_url, category, featured, price } = body;
+			const { name, description, image_url, category, featured, price } =
+				body;
 
 			if (!name || !image_url) {
 				return NextResponse.json(
 					{ error: "Name and image_url are required" },
-					{ status: 400 }
+					{ status: 400 },
 				);
 			}
 
@@ -168,26 +199,28 @@ export async function POST(request: NextRequest) {
 			body as CreateProductInput;
 
 		if (!name) {
-			return NextResponse.json({ error: "Name is required" }, { status: 400 });
+			return NextResponse.json(
+				{ error: "Name is required" },
+				{ status: 400 },
+			);
 		}
 
 		if (!images || images.length === 0) {
 			return NextResponse.json(
 				{ error: "At least one image is required" },
-				{ status: 400 }
+				{ status: 400 },
 			);
 		}
 
 		if (!variants || variants.length === 0) {
 			return NextResponse.json(
 				{ error: "At least one variant is required" },
-				{ status: 400 }
+				{ status: 400 },
 			);
 		}
 
 		// Get primary image for legacy field
-		const primaryImage =
-			images.find((img) => img.is_primary) || images[0];
+		const primaryImage = images.find((img) => img.is_primary) || images[0];
 		// Get lowest price for legacy field
 		const lowestPrice = Math.min(...variants.map((v) => v.price));
 
@@ -212,9 +245,12 @@ export async function POST(request: NextRequest) {
 		// Insert variants
 		for (let i = 0; i < variants.length; i++) {
 			const variant = variants[i];
+			const stockQuantity = normalizeStockQuantity(
+				variant.stock_quantity,
+			);
 			await sql`
-        INSERT INTO product_variants (product_id, name, sku, price, sort_order, in_stock)
-        VALUES (${product.id}, ${variant.name}, ${variant.sku || null}, ${variant.price}, ${variant.sort_order ?? i}, ${variant.in_stock ?? true})
+        INSERT INTO product_variants (product_id, name, sku, price, sort_order, stock_quantity, in_stock)
+        VALUES (${product.id}, ${variant.name}, ${variant.sku || null}, ${variant.price}, ${variant.sort_order ?? i}, ${stockQuantity}, ${stockQuantity > 0})
       `;
 		}
 
@@ -222,7 +258,7 @@ export async function POST(request: NextRequest) {
 		const detailsMap = await getProductDetails([product.id]);
 		const productWithDetails = normalizeProduct(
 			product,
-			detailsMap.get(product.id)
+			detailsMap.get(product.id),
 		);
 
 		return NextResponse.json(productWithDetails, { status: 201 });
@@ -230,7 +266,7 @@ export async function POST(request: NextRequest) {
 		console.error("Error creating product:", error);
 		return NextResponse.json(
 			{ error: "Failed to create product" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }
