@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { gsap } from "gsap";
+import { usePostHog } from "@posthog/next";
 import { useCartStore } from "@/lib/store/cart";
 import { Button, ButtonProps } from "@/components/ui/Button";
 
@@ -31,6 +32,7 @@ export function AddToCartButton({
 	...props
 }: AddToCartButtonProps) {
 	const buttonRef = useRef<HTMLButtonElement>(null);
+	const posthog = usePostHog();
 	const addItem = useCartStore((state) => state.addItem);
 
 	// Use variant price if available, otherwise product price
@@ -48,10 +50,19 @@ export function AddToCartButton({
 			image_url: product.image_url,
 		});
 
+		posthog?.capture("product_added_to_cart", {
+			product_id: product.id,
+			product_name: product.name,
+			variant_id: selectedVariant?.id ?? null,
+			variant_name: selectedVariant?.name ?? null,
+			price: Number(price),
+			source_page:
+				typeof window !== "undefined" ? window.location.pathname : null,
+		});
+
 		// Success animation
 		if (buttonRef.current) {
-			gsap
-				.timeline()
+			gsap.timeline()
 				.to(buttonRef.current, {
 					scale: 0.95,
 					duration: 0.1,
@@ -92,7 +103,9 @@ export function AddToCartButton({
 							d="M12 6v6m0 0v6m0-6h6m-6 0H6"
 						/>
 					</svg>
-					{showPrice ? `Add to Cart - $${Number(price).toFixed(2)}` : "Add to Cart"}
+					{showPrice
+						? `Add to Cart - $${Number(price).toFixed(2)}`
+						: "Add to Cart"}
 				</>
 			) : (
 				"Price Coming Soon"

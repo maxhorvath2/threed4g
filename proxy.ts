@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { postHogMiddleware } from "@posthog/next";
+
+const posthog = postHogMiddleware({ proxy: true });
 
 export function proxy(request: NextRequest) {
 	// Check if accessing admin routes
@@ -18,9 +21,9 @@ export function proxy(request: NextRequest) {
 		}
 	}
 
-	return NextResponse.next();
+	return posthog(request);
 }
 
 export const config = {
-	matcher: ["/admin/:path*", "/login"],
+	matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

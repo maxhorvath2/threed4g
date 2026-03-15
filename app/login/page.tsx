@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { usePostHog } from "@posthog/next";
 
 export default function Login() {
 	const [username, setUsername] = useState("");
@@ -9,6 +10,7 @@ export default function Login() {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 	const router = useRouter();
+	const posthog = usePostHog();
 
 	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault();
@@ -30,6 +32,11 @@ export default function Login() {
 				return;
 			}
 
+			posthog?.identify(data.username ?? username, {
+				username: data.username ?? username,
+				role: "admin",
+			});
+
 			router.push("/admin");
 			router.refresh();
 		} catch {
@@ -42,16 +49,25 @@ export default function Login() {
 		<div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
 			<div className="w-full max-w-md">
 				<div className="text-center mb-8">
-					<h1 className="text-3xl font-semibold mb-2 text-[#fafafa]">ThreeD4G</h1>
+					<h1 className="text-3xl font-semibold mb-2 text-[#fafafa]">
+						ThreeD4G
+					</h1>
 					<p className="text-[#a3a3a3]">Admin Login</p>
 				</div>
 
 				<div className="border border-[#262626] rounded-lg p-8 bg-[#111111]">
 					<form onSubmit={handleSubmit} className="space-y-6">
-						{error && <div className="p-3 bg-[#7f1d1d] border border-[#991b1b] rounded text-[#fca5a5] text-sm">{error}</div>}
+						{error && (
+							<div className="p-3 bg-[#7f1d1d] border border-[#991b1b] rounded text-[#fca5a5] text-sm">
+								{error}
+							</div>
+						)}
 
 						<div>
-							<label htmlFor="username" className="block text-sm font-medium text-[#fafafa] mb-2">
+							<label
+								htmlFor="username"
+								className="block text-sm font-medium text-[#fafafa] mb-2"
+							>
 								Username
 							</label>
 							<input
@@ -65,7 +81,10 @@ export default function Login() {
 						</div>
 
 						<div>
-							<label htmlFor="password" className="block text-sm font-medium text-[#fafafa] mb-2">
+							<label
+								htmlFor="password"
+								className="block text-sm font-medium text-[#fafafa] mb-2"
+							>
 								Password
 							</label>
 							<input

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { usePostHog } from "@posthog/next";
 import { MagneticButton } from "@/components/animations/MagneticButton";
-import posthog from "posthog-js";
 
 const navigation = {
 	main: [
@@ -33,6 +33,7 @@ const navigation = {
 
 export function Footer() {
 	const currentYear = new Date().getFullYear();
+	const posthog = usePostHog();
 
 	return (
 		<footer className="relative border-t border-[#171717]">
@@ -124,7 +125,7 @@ export function Footer() {
 										target="_blank"
 										rel="noopener noreferrer"
 										onClick={() =>
-											posthog.capture(
+											posthog?.capture(
 												"social_link_clicked",
 												{
 													platform: item.name,
@@ -148,7 +149,7 @@ export function Footer() {
 								target="_blank"
 								rel="noopener noreferrer"
 								onClick={() =>
-									posthog.capture(
+									posthog?.capture(
 										"lattice_studios_link_clicked",
 										{
 											url: "https://www.instagram.com/latticestudiosdesign/",

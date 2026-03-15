@@ -3,8 +3,8 @@ import { Space_Grotesk, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SmoothScrollProvider } from "@/components/animations/SmoothScroll";
 import { CartDrawer } from "@/components/cart/CartDrawer";
-import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import "./globals.css";
+import { PostHogPageView, PostHogProvider } from "@posthog/next";
 
 const spaceGrotesk = Space_Grotesk({
 	variable: "--font-display",
@@ -35,8 +35,12 @@ export default function RootLayout({
 			<body
 				className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}
 			>
-				<PostHogProvider>
+				<PostHogProvider
+					clientOptions={{ api_host: "/ingest" }}
+					bootstrapFlags
+				>
 					<SmoothScrollProvider>
+						<PostHogPageView />
 						{/* Grain overlay for premium texture */}
 						<div className="grain" aria-hidden="true" />
 

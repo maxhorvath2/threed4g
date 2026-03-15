@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import posthog from "posthog-js";
 
 export interface CartItem {
 	id: string; // Composite key: "productId" or "productId-variantId"
@@ -54,15 +53,20 @@ export const useCartStore = create<CartStore>()(
 
 			addItem: (product) => {
 				const items = get().items;
-				const cartItemId = getCartItemId(product.productId, product.variantId);
-				const existingItem = items.find((item) => item.id === cartItemId);
+				const cartItemId = getCartItemId(
+					product.productId,
+					product.variantId,
+				);
+				const existingItem = items.find(
+					(item) => item.id === cartItemId,
+				);
 
 				if (existingItem) {
 					set({
 						items: items.map((item) =>
 							item.id === cartItemId
 								? { ...item, quantity: item.quantity + 1 }
-								: item
+								: item,
 						),
 					});
 				} else {
@@ -83,16 +87,6 @@ export const useCartStore = create<CartStore>()(
 					});
 				}
 
-				// Track add to cart event
-				posthog.capture("product_added_to_cart", {
-					product_id: product.productId,
-					product_name: product.name,
-					variant_id: product.variantId,
-					variant_name: product.variantName,
-					price: product.price,
-					source_page: typeof window !== "undefined" ? window.location.pathname : null,
-				});
-
 				// Auto-open cart when adding items
 				set({ isOpen: true });
 			},
@@ -111,7 +105,7 @@ export const useCartStore = create<CartStore>()(
 
 				set({
 					items: get().items.map((item) =>
-						item.id === id ? { ...item, quantity } : item
+						item.id === id ? { ...item, quantity } : item,
 					),
 				});
 			},
@@ -123,18 +117,21 @@ export const useCartStore = create<CartStore>()(
 			closeCart: () => set({ isOpen: false }),
 
 			getItemCount: () => {
-				return get().items.reduce((total, item) => total + item.quantity, 0);
+				return get().items.reduce(
+					(total, item) => total + item.quantity,
+					0,
+				);
 			},
 
 			getTotal: () => {
 				return get().items.reduce(
 					(total, item) => total + Number(item.price) * item.quantity,
-					0
+					0,
 				);
 			},
 		}),
 		{
 			name: "threed4g-cart",
-		}
-	)
+		},
+	),
 );
