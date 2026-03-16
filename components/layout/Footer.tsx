@@ -144,7 +144,7 @@ export function Footer() {
 						<p className="text-[#737373] text-xs">
 							Designed and built by{" "}
 							<a
-								href="https://www.instagram.com/latticestudiosdesign/"
+								href="https://www.instagram.com/lattice.studios/"
 								className="underline hover:text-white transition-colors duration-300"
 								target="_blank"
 								rel="noopener noreferrer"
@@ -152,7 +152,7 @@ export function Footer() {
 									posthog?.capture(
 										"lattice_studios_link_clicked",
 										{
-											url: "https://www.instagram.com/latticestudiosdesign/",
+											url: "https://www.instagram.com/lattice.studios/",
 										},
 									)
 								}

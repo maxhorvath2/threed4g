@@ -274,22 +274,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
 												onClick={() =>
 													setSelectedVariant(variant)
 												}
-												disabled={
-													Number(
-														variant.stock_quantity ??
-															0,
-													) <= 0
-												}
 												className={`px-4 py-3 rounded-lg border transition-all ${
 													selectedVariant?.id ===
 													variant.id
 														? "border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]"
-														: Number(
-																	variant.stock_quantity ??
-																		0,
-															  ) > 0
-															? "border-[#262626] hover:border-[#404040] text-[#fafafa]"
-															: "border-[#262626] text-[#525252] cursor-not-allowed opacity-50"
+														: "border-[#262626] hover:border-[#404040] text-[#fafafa]"
 												}`}
 											>
 												<div className="text-sm font-medium">
