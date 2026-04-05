@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Space_Grotesk, Inter, Geist } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SmoothScrollProvider } from "@/components/animations/SmoothScroll";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { CartStockSync } from "@/components/cart/CartStockSync";
 import "./globals.css";
 import { PostHogPageView, PostHogProvider } from "@posthog/next";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const spaceGrotesk = Space_Grotesk({
 	variable: "--font-display",
@@ -31,7 +34,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
+		<html lang="en" className={cn("font-sans", geist.variable)}>
 			<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 			<body
 				className={`${spaceGrotesk.variable} ${inter.variable} antialiased`}

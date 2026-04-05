@@ -6,6 +6,7 @@ import Link from "next/link";
 import { gsap } from "gsap";
 import { usePostHog } from "@posthog/next";
 import { useCartStore } from "@/lib/store/cart";
+import { Button } from "@/components/ui/Button";
 
 // useSyncExternalStore pattern for hydration-safe mounting detection
 const emptySubscribe = () => () => {};
@@ -279,13 +280,11 @@ export function CartDrawer() {
 								</span>
 							</div>
 
-							<button
-								type="button"
-								disabled
-								className="block w-full text-center py-3 rounded-xl bg-[#262626] text-[#737373] font-semibold cursor-not-allowed"
-							>
-								Checkout available soon
-							</button>
+							<Button asChild className="w-full">
+								<Link href="/checkout" onClick={closeCart}>
+									Go To Checkout
+								</Link>
+							</Button>
 
 							<div className="p-4 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20">
 								<p className="text-sm text-[#a3a3a3] mb-2">

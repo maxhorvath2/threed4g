@@ -115,6 +115,24 @@ export default async function Home() {
 	return (
 		<div className="min-h-screen bg-[#050505] overflow-hidden">
 			<Navigation />
+			<section
+				className="launch-marquee"
+				aria-label="Launch announcement"
+			>
+				<div className="launch-marquee-track" role="presentation">
+					<span>Banger Bath 4/20 Launch</span>
+					<span aria-hidden="true">-</span>
+					<span>Banger Bath 4/20 Launch</span>
+					<span aria-hidden="true">-</span>
+					<span>Banger Bath 4/20 Launch</span>
+					<span aria-hidden="true">-</span>
+					<span>Banger Bath 4/20 Launch</span>
+					<span aria-hidden="true">-</span>
+					<span>Banger Bath 4/20 Launch</span>
+					<span aria-hidden="true">-</span>
+					<span>Banger Bath 4/20 Launch</span>
+				</div>
+			</section>
 
 			{/* Hero Section */}
 			<HeroSection />

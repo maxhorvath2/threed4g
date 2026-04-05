@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import {
+	getAusPostShippingOptions,
+	type LiveShippingOption,
+} from "@/lib/auspost";
+import {
+	getCheckoutCurrency,
+	isValidEmail,
+	normalizeCheckoutItems,
+	normalizeShippingAddress,
+	type ResolvedCheckoutItem,
+} from "@/lib/checkout";
 import { sql } from "@/lib/db";
-
-interface CheckoutItemInput {
-	id: string;
-	productId: number;
-	variantId: number | null;
-	quantity: number;
-}
 
 interface ResolvedVariantRow {
 	id: number;
@@ -16,25 +20,6 @@ interface ResolvedVariantRow {
 	name: string;
 	price: number;
 	stock_quantity: number;
-}
-
-function asRecord(value: unknown): Record<string, unknown> {
-	if (typeof value === "object" && value !== null) {
-		return value as Record<string, unknown>;
-	}
-	return {};
-}
-
-function parsePositiveInt(value: unknown, fallback = 0): number {
-	const parsed = Number.parseInt(String(value ?? fallback), 10);
-	if (!Number.isFinite(parsed) || parsed < 0) {
-		return fallback;
-	}
-	return parsed;
-}
-
-function isValidEmail(value: string): boolean {
-	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 export async function POST(request: NextRequest) {
@@ -47,37 +32,71 @@ export async function POST(request: NextRequest) {
 		}
 
 		const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-		const body = asRecord(await request.json());
-		const rawCustomer = asRecord(body.customer);
+		const body = (await request.json()) as Record<string, unknown>;
+		const rawCustomer = (body.customer ?? {}) as Record<string, unknown>;
 		const customerName = String(rawCustomer.name ?? "").trim();
 		const customerEmail = String(rawCustomer.email ?? "")
 			.trim()
 			.toLowerCase();
 
-		if (!customerName || !customerEmail || !isValidEmail(customerEmail)) {
+		if (!customerName || !isValidEmail(customerEmail)) {
 			return NextResponse.json(
 				{ error: "Valid customer name and email are required" },
 				{ status: 400 },
 			);
 		}
 
-		const rawItems = Array.isArray(body.items)
-			? (body.items as unknown[])
-			: [];
-		const requestedItems: CheckoutItemInput[] = rawItems
-			.map((item): CheckoutItemInput => {
-				const row = asRecord(item);
-				return {
-					id: String(row.id ?? ""),
-					productId: parsePositiveInt(row.productId, 0),
-					variantId:
-						row.variantId === null || row.variantId === undefined
-							? null
-							: parsePositiveInt(row.variantId, 0),
-					quantity: Math.max(1, parsePositiveInt(row.quantity, 1)),
-				};
-			})
-			.filter((item) => item.id !== "" && item.productId > 0);
+		const shipping = normalizeShippingAddress(body.shipping);
+		if (!shipping) {
+			return NextResponse.json(
+				{ error: "A valid shipping address is required" },
+				{ status: 400 },
+			);
+		}
+
+		const liveShippingOptions = await getAusPostShippingOptions({
+			countryCode: shipping.address.country,
+			toPostcode: shipping.address.postal_code,
+		});
+
+		if (liveShippingOptions.length === 0) {
+			return NextResponse.json(
+				{
+					error: "No live shipping options are available for this destination",
+				},
+				{ status: 409 },
+			);
+		}
+
+		const shippingOptionId = String(body.shippingOptionId ?? "").trim();
+		if (!shippingOptionId) {
+			return NextResponse.json(
+				{
+					error: "A shipping option is required",
+					shippingOptions: liveShippingOptions,
+				},
+				{ status: 400 },
+			);
+		}
+
+		const shippingOption =
+			liveShippingOptions.find(
+				(option) => option.id === shippingOptionId,
+			) ?? null;
+		if (!shippingOption) {
+			return NextResponse.json(
+				{
+					error: "Invalid shipping option for this destination",
+					shippingOptions: liveShippingOptions,
+				},
+				{ status: 400 },
+			);
+		}
+
+		const selectedShippingOption: LiveShippingOption = shippingOption;
+
+		const rawItems = Array.isArray(body.items) ? body.items : [];
+		const requestedItems = normalizeCheckoutItems(rawItems);
 
 		if (requestedItems.length === 0) {
 			return NextResponse.json(
@@ -140,15 +159,7 @@ export async function POST(request: NextRequest) {
 			]),
 		);
 
-		const resolvedLineItems: Array<{
-			productId: number;
-			variantId: number;
-			productName: string;
-			variantName: string;
-			unitPrice: number;
-			quantity: number;
-		}> = [];
-
+		const resolvedLineItems: ResolvedCheckoutItem[] = [];
 		for (const item of requestedItems) {
 			const resolved =
 				item.variantId !== null
@@ -162,7 +173,7 @@ export async function POST(request: NextRequest) {
 				);
 			}
 
-			const stockQuantity = parsePositiveInt(resolved.stock_quantity, 0);
+			const stockQuantity = Number(resolved.stock_quantity ?? 0);
 			if (stockQuantity < item.quantity) {
 				return NextResponse.json(
 					{
@@ -185,14 +196,27 @@ export async function POST(request: NextRequest) {
 			});
 		}
 
-		const subtotal = resolvedLineItems.reduce(
+		const aggregatedItems = Array.from(
+			resolvedLineItems.reduce((accumulator, item) => {
+				const existing = accumulator.get(item.variantId);
+				if (existing) {
+					existing.quantity += item.quantity;
+					return accumulator;
+				}
+
+				accumulator.set(item.variantId, { ...item });
+				return accumulator;
+			}, new Map<number, ResolvedCheckoutItem>()),
+		).map(([, item]) => item);
+
+		const subtotal = aggregatedItems.reduce(
 			(total, item) => total + item.unitPrice * item.quantity,
 			0,
 		);
-		const currency = String(
-			process.env.STRIPE_CURRENCY ?? "aud",
-		).toLowerCase();
-		const amount = Math.round(subtotal * 100);
+		const shippingAmount = selectedShippingOption.amount;
+		const totalAmount = subtotal + shippingAmount;
+		const currency = getCheckoutCurrency();
+		const amount = Math.round(totalAmount * 100);
 
 		if (amount <= 0) {
 			return NextResponse.json(
@@ -209,16 +233,31 @@ export async function POST(request: NextRequest) {
 			metadata: {
 				customer_name: customerName,
 				customer_email: customerEmail,
-				item_count: String(resolvedLineItems.length),
+				item_count: String(aggregatedItems.length),
+				shipping_country: shipping.address.country,
+				shipping_option_id: selectedShippingOption.id,
+				shipping_option_label: selectedShippingOption.label,
+				shipping_option_service_code:
+					selectedShippingOption.serviceCode,
 			},
 		});
+
+		if (!paymentIntent.client_secret) {
+			return NextResponse.json(
+				{ error: "Failed to initialize payment session" },
+				{ status: 500 },
+			);
+		}
 
 		return NextResponse.json({
 			clientSecret: paymentIntent.client_secret,
 			paymentIntentId: paymentIntent.id,
+			shippingOption: selectedShippingOption,
 			currency,
 			subtotal,
-			items: resolvedLineItems,
+			shippingAmount,
+			totalAmount,
+			items: aggregatedItems,
 		});
 	} catch (error) {
 		console.error("Error creating payment intent:", error);

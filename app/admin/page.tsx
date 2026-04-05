@@ -1465,7 +1465,25 @@ export default function AdminDashboard() {
 								{orders.map((order) => (
 									<div
 										key={order.id}
-										className="border border-[#262626] rounded-lg bg-[#111111] p-4"
+										role="button"
+										tabIndex={0}
+										onClick={() =>
+											router.push(
+												`/admin/orders/${order.id}`,
+											)
+										}
+										onKeyDown={(event) => {
+											if (
+												event.key === "Enter" ||
+												event.key === " "
+											) {
+												event.preventDefault();
+												router.push(
+													`/admin/orders/${order.id}`,
+												);
+											}
+										}}
+										className="border border-[#262626] rounded-lg bg-[#111111] p-4 cursor-pointer hover:border-[#404040] hover:bg-[#151515] transition-colors"
 									>
 										<div className="flex flex-wrap justify-between items-start gap-3 mb-3">
 											<div>
