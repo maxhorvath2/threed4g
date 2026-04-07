@@ -57,9 +57,12 @@ BLOB_READ_WRITE_TOKEN="vercel_blob_rw_..."
 STRIPE_SECRET_KEY="sk_test_..."
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
+ORDER_NOTIFICATION_EMAIL="contact@threed4g.com"
+ORDER_FROM_EMAIL="ThreeD4G Orders <contact@threed4g.com>"
 STRIPE_CURRENCY="aud"
 AUSPOST_API_KEY="your_auspost_pac_api_key"
 AUSPOST_FROM_POSTCODE="3000"
+RESEND_API_KEY="re_..."
 ```
 
 4. Initialize the database schema (run `schema.sql` against your Postgres DB).
@@ -102,6 +105,8 @@ pnpm dev
 - `NEXT_PUBLIC_POSTHOG_KEY`: enables PostHog analytics
 - `NEXT_PUBLIC_POSTHOG_HOST`: PostHog host (defaults to `https://us.i.posthog.com`)
 - `STRIPE_CURRENCY`: Stripe currency for checkout, defaults to `aud`
+- `ORDER_NOTIFICATION_EMAIL`: inbox that receives new order notifications, defaults to `contact@threed4g.com`
+- `ORDER_FROM_EMAIL`: verified sender address for order emails
 - `AUSPOST_DEFAULT_WEIGHT_KG`: default parcel weight for PAC quotes (defaults to `1`)
 - `AUSPOST_DEFAULT_LENGTH_CM`: default parcel length for PAC quotes (defaults to `22`)
 - `AUSPOST_DEFAULT_WIDTH_CM`: default parcel width for PAC quotes (defaults to `16`)

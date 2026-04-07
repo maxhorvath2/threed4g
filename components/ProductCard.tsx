@@ -13,7 +13,10 @@ interface ProductCardProps {
 	index?: number;
 }
 
-export default function ProductCard({ product, variant = "default" }: ProductCardProps) {
+export default function ProductCard({
+	product,
+	variant = "default",
+}: ProductCardProps) {
 	const cardRef = useRef<HTMLDivElement>(null);
 	const imageRef = useRef<HTMLDivElement>(null);
 	const [isHovered, setIsHovered] = useState(false);
@@ -80,7 +83,8 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 	};
 
 	const priceDisplay = getPriceDisplay();
-	const primaryImage = product.images?.find((img) => img.is_primary) || product.images?.[0];
+	const primaryImage =
+		product.images?.find((img) => img.is_primary) || product.images?.[0];
 	const imageUrl = primaryImage?.image_url || product.image_url;
 	const hasMultipleVariants = product.variants && product.variants.length > 1;
 
@@ -105,7 +109,10 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 
 			{/* Image container */}
 			<Link href={`/product/${product.id}`} className="block">
-				<div ref={imageRef} className="aspect-square relative overflow-hidden bg-[#0f0f0f]">
+				<div
+					ref={imageRef}
+					className="aspect-square relative overflow-hidden bg-[#0f0f0f]"
+				>
 					<Image
 						src={imageUrl}
 						alt={product.name}
@@ -138,11 +145,15 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 					{/* Hover overlay with "View Options" for multi-variant products */}
 					<div
 						className={`absolute bottom-4 left-4 right-4 transition-all duration-300 z-20 ${
-							isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+							isHovered
+								? "opacity-100 translate-y-0"
+								: "opacity-0 translate-y-4"
 						}`}
 					>
 						<div className="w-full py-2 px-4 bg-[#22c55e] text-[#0a0a0a] font-medium rounded-xl text-center text-sm backdrop-blur-sm">
-							{hasMultipleVariants ? "View Options" : "View Details"}
+							{hasMultipleVariants
+								? "View Options"
+								: "View Details"}
 						</div>
 					</div>
 				</div>
@@ -154,10 +165,18 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
 					<h3 className="text-base font-semibold text-[#fafafa] line-clamp-1 group-hover:text-[#22c55e] transition-colors duration-300">
 						{product.name}
 					</h3>
-					{priceDisplay && <span className="text-[#22c55e] font-bold whitespace-nowrap">{priceDisplay}</span>}
+					{priceDisplay && (
+						<span className="text-[#22c55e] font-bold whitespace-nowrap">
+							{priceDisplay}
+						</span>
+					)}
 				</div>
 
-				{product.description && <p className="text-sm text-[#737373] line-clamp-2 mb-3 leading-relaxed">{product.description}</p>}
+				{product.description && (
+					<p className="text-sm text-[#737373] line-clamp-2 mb-3 leading-relaxed">
+						{product.description}
+					</p>
+				)}
 
 				<div className="flex flex-wrap gap-2">
 					{product.category && (

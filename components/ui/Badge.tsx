@@ -26,10 +26,11 @@ export function Badge({
 					"bg-[#1a1a1a] text-[#737373]": variant === "secondary",
 
 					// Outline
-					"border border-[#262626] text-[#a3a3a3]": variant === "outline",
+					"border border-[#262626] text-[#a3a3a3]":
+						variant === "outline",
 				},
 
-				className
+				className,
 			)}
 			{...props}
 		/>

@@ -33,12 +33,12 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
 							variant === "interactive",
 					},
 
-					className
+					className,
 				)}
 				{...props}
 			/>
 		);
-	}
+	},
 );
 
 Card.displayName = "Card";

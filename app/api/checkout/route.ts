@@ -22,6 +22,123 @@ interface ResolvedVariantRow {
 	stock_quantity: number;
 }
 
+function escapeHtml(value: string): string {
+	return value
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
+}
+
+function formatMoney(amount: number, currency: string): string {
+	return `${currency.toUpperCase()} ${amount.toFixed(2)}`;
+}
+
+function renderLineItemsHtml(
+	items: Array<{
+		productName: string;
+		variantName: string;
+		quantity: number;
+		unitPrice: number;
+	}>,
+	currency: string,
+): string {
+	return items
+		.map(
+			(item) => `
+				<li style="margin-bottom: 12px;">
+					<strong>${escapeHtml(item.productName)}</strong><br />
+					<span>${escapeHtml(item.variantName)}</span><br />
+					<span>Qty ${item.quantity} · ${formatMoney(item.unitPrice, currency)} each</span>
+				</li>
+			`,
+		)
+		.join("");
+}
+
+function renderOrderDetailsHtml(params: {
+	orderId: number;
+	customerName: string;
+	customerEmail: string;
+	shippingName: string;
+	shippingPhone: string | null;
+	shippingLine1: string;
+	shippingLine2: string | null;
+	shippingCity: string;
+	shippingState: string;
+	shippingPostalCode: string;
+	shippingCountry: string;
+	shippingMethod: string;
+	paymentIntentId: string;
+	status: string;
+	paymentStatus: string;
+	currency: string;
+	subtotal: number;
+	shippingAmount: number;
+	totalAmount: number;
+	lineItems: Array<{
+		productName: string;
+		variantName: string;
+		quantity: number;
+		unitPrice: number;
+	}>;
+}): string {
+	const shippingAddressLine2 = params.shippingLine2
+		? `<br />${escapeHtml(params.shippingLine2)}`
+		: "";
+	const shippingPhone = params.shippingPhone
+		? `<p><strong>Phone:</strong> ${escapeHtml(params.shippingPhone)}</p>`
+		: "";
+
+	return `
+		<div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #111827;">
+			<h2 style="margin-bottom: 12px;">Order #${params.orderId}</h2>
+			<p><strong>Customer:</strong> ${escapeHtml(params.customerName)} (${escapeHtml(params.customerEmail)})</p>
+			<p><strong>Status:</strong> ${escapeHtml(params.status)} · <strong>Payment:</strong> ${escapeHtml(params.paymentStatus)}</p>
+			<p><strong>Payment Intent:</strong> ${escapeHtml(params.paymentIntentId)}</p>
+			<p><strong>Shipping Method:</strong> ${escapeHtml(params.shippingMethod)}</p>
+			<p><strong>Ship To:</strong><br />${escapeHtml(params.shippingName)}<br />${escapeHtml(params.shippingLine1)}${shippingAddressLine2}<br />${escapeHtml(params.shippingCity)}, ${escapeHtml(params.shippingState)} ${escapeHtml(params.shippingPostalCode)}<br />${escapeHtml(params.shippingCountry)}</p>
+			${shippingPhone}
+			<h3 style="margin: 24px 0 12px;">Items</h3>
+			<ul style="padding-left: 18px; margin: 0 0 24px;">${renderLineItemsHtml(params.lineItems, params.currency)}</ul>
+			<p><strong>Subtotal:</strong> ${formatMoney(params.subtotal, params.currency)}</p>
+			<p><strong>Shipping:</strong> ${formatMoney(params.shippingAmount, params.currency)}</p>
+			<p><strong>Total:</strong> ${formatMoney(params.totalAmount, params.currency)}</p>
+		</div>
+	`;
+}
+
+function renderCustomerConfirmationHtml(params: {
+	customerName: string;
+	orderId: number;
+	currency: string;
+	subtotal: number;
+	shippingAmount: number;
+	totalAmount: number;
+	shippingMethod: string;
+	lineItems: Array<{
+		productName: string;
+		variantName: string;
+		quantity: number;
+		unitPrice: number;
+	}>;
+}): string {
+	return `
+		<div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; color: #111827;">
+			<h2 style="margin-bottom: 12px;">Thanks for your order, ${escapeHtml(params.customerName)}!</h2>
+			<p>We’ve received your payment and are preparing your order.</p>
+			<p><strong>Order ID:</strong> #${params.orderId}</p>
+			<p><strong>Shipping Method:</strong> ${escapeHtml(params.shippingMethod)}</p>
+			<h3 style="margin: 24px 0 12px;">Items</h3>
+			<ul style="padding-left: 18px; margin: 0 0 24px;">${renderLineItemsHtml(params.lineItems, params.currency)}</ul>
+			<p><strong>Subtotal:</strong> ${formatMoney(params.subtotal, params.currency)}</p>
+			<p><strong>Shipping:</strong> ${formatMoney(params.shippingAmount, params.currency)}</p>
+			<p><strong>Total:</strong> ${formatMoney(params.totalAmount, params.currency)}</p>
+		</div>
+	`;
+}
+
 async function ensureOrderTables() {
 	await sql`
 		CREATE TABLE IF NOT EXISTS orders (
@@ -463,57 +580,74 @@ export async function POST(request: NextRequest) {
 		};
 
 		const resendApiKey = process.env.RESEND_API_KEY;
-		const adminEmail = process.env.ORDER_ADMIN_EMAIL;
+		const notificationEmail =
+			process.env.ORDER_NOTIFICATION_EMAIL ?? "contact@threed4g.com";
 		const fromEmail =
 			process.env.ORDER_FROM_EMAIL ??
 			"ThreeD4G Orders <orders@contact.threed4g.com>";
 
 		if (resendApiKey) {
 			const resend = new Resend(resendApiKey);
-			const lineItemsHtml = lineItems
-				.map(
-					(item) =>
-						`<li>${item.productName} - ${item.variantName} x ${item.quantity} ($${item.unitPrice.toFixed(2)})</li>`,
-				)
-				.join("");
-
-			void resend.emails.send({
-				from: fromEmail,
-				to: customerEmail,
-				subject: `Order Confirmation #${finalizedOrder.id}`,
-				html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Thanks for your order, ${customerName}!</h2>
-            <p>We have received your order and payment.</p>
-            <p><strong>Order ID:</strong> #${finalizedOrder.id}</p>
-            <ul>${lineItemsHtml}</ul>
-            <p><strong>Subtotal:</strong> $${finalizedOrder.subtotal.toFixed(2)} ${currency.toUpperCase()}</p>
-			<p><strong>Shipping:</strong> ${selectedShippingOption.label} - $${finalizedOrder.shipping_amount.toFixed(2)} ${currency.toUpperCase()}</p>
-            <p><strong>Total:</strong> $${finalizedOrder.total_amount.toFixed(2)} ${currency.toUpperCase()}</p>
-          </div>
-        `,
+			const customerEmailHtml = renderCustomerConfirmationHtml({
+				customerName,
+				orderId: finalizedOrder.id,
+				currency,
+				subtotal: finalizedOrder.subtotal,
+				shippingAmount: finalizedOrder.shipping_amount,
+				totalAmount: finalizedOrder.total_amount,
+				shippingMethod: selectedShippingOption.label,
+				lineItems,
 			});
 
-			if (adminEmail) {
-				void resend.emails.send({
+			const notificationEmailHtml = renderOrderDetailsHtml({
+				orderId: finalizedOrder.id,
+				customerName,
+				customerEmail,
+				shippingName: shipping.name,
+				shippingPhone: shipping.phone,
+				shippingLine1: shipping.address.line1,
+				shippingLine2: shipping.address.line2,
+				shippingCity: shipping.address.city,
+				shippingState: shipping.address.state,
+				shippingPostalCode: shipping.address.postal_code,
+				shippingCountry: shipping.address.country,
+				shippingMethod: selectedShippingOption.label,
+				paymentIntentId,
+				status: finalizedOrder.status,
+				paymentStatus: finalizedOrder.payment_status,
+				currency,
+				subtotal: finalizedOrder.subtotal,
+				shippingAmount: finalizedOrder.shipping_amount,
+				totalAmount: finalizedOrder.total_amount,
+				lineItems,
+			});
+
+			const emailResults = await Promise.allSettled([
+				resend.emails.send({
 					from: fromEmail,
-					to: adminEmail,
+					to: customerEmail,
+					subject: `Order Confirmation #${finalizedOrder.id}`,
+					html: customerEmailHtml,
+				}),
+				resend.emails.send({
+					from: fromEmail,
+					to: notificationEmail,
 					subject: `New Order Submitted #${finalizedOrder.id}`,
-					html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>New order submitted</h2>
-              <p><strong>Order ID:</strong> #${finalizedOrder.id}</p>
-              <p><strong>Customer:</strong> ${customerName} (${customerEmail})</p>
-              <p><strong>Ship To:</strong> ${shipping.name}, ${shipping.address.line1}, ${shipping.address.city}, ${shipping.address.state} ${shipping.address.postal_code}, ${shipping.address.country}</p>
-							<p><strong>Shipping Method:</strong> ${selectedShippingOption.label}</p>
-              <ul>${lineItemsHtml}</ul>
-              <p><strong>Subtotal:</strong> $${finalizedOrder.subtotal.toFixed(2)} ${currency.toUpperCase()}</p>
-              <p><strong>Shipping:</strong> $${finalizedOrder.shipping_amount.toFixed(2)} ${currency.toUpperCase()}</p>
-              <p><strong>Total:</strong> $${finalizedOrder.total_amount.toFixed(2)} ${currency.toUpperCase()}</p>
-            </div>
-          `,
-				});
-			}
+					html: notificationEmailHtml,
+				}),
+			]);
+
+			emailResults.forEach((result, index) => {
+				if (result.status === "rejected") {
+					const recipient =
+						index === 0 ? customerEmail : notificationEmail;
+					console.error("Order email failed", {
+						orderId: finalizedOrder.id,
+						recipient,
+						error: result.reason,
+					});
+				}
+			});
 		}
 
 		return NextResponse.json(

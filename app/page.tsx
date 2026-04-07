@@ -11,6 +11,7 @@ import type {
 	ProductVariant,
 	ProductWithDetails,
 } from "@/lib/types/product";
+import { Marquee } from "@/components/ui/marquee";
 
 export const dynamic = "force-dynamic";
 
@@ -115,25 +116,23 @@ export default async function Home() {
 	return (
 		<div className="min-h-screen bg-[#050505] overflow-hidden">
 			<Navigation />
-			<section
-				className="launch-marquee"
-				aria-label="Launch announcement"
-			>
-				<div className="launch-marquee-track" role="presentation">
-					<span>Banger Bath 4/20 Launch</span>
-					<span aria-hidden="true">-</span>
-					<span>Banger Bath 4/20 Launch</span>
-					<span aria-hidden="true">-</span>
-					<span>Banger Bath 4/20 Launch</span>
-					<span aria-hidden="true">-</span>
-					<span>Banger Bath 4/20 Launch</span>
-					<span aria-hidden="true">-</span>
-					<span>Banger Bath 4/20 Launch</span>
-					<span aria-hidden="true">-</span>
-					<span>Banger Bath 4/20 Launch</span>
-				</div>
-			</section>
-
+			<div className="fixed top-20 left-0 right-0 z-40 border-y border-[#86efac]/50 bg-linear-to-r from-[#0f3f23] via-[#22c55e] to-[#0f3f23] shadow-[0_0_24px_rgba(34,197,94,0.35)]">
+				<Marquee>
+					<span className="text-xs md:text-sm font-extrabold uppercase tracking-[0.18em] text-[#031007] drop-shadow-[0_1px_0_rgba(255,255,255,0.18)]">
+						BANGER BATH LAUNCH 4/20
+					</span>
+					<span className="text-xs md:text-sm font-extrabold uppercase tracking-[0.18em] text-[#031007] drop-shadow-[0_1px_0_rgba(255,255,255,0.18)]">
+						BANGER BATH LAUNCH 4/20
+					</span>
+					<span className="text-xs md:text-sm font-extrabold uppercase tracking-[0.18em] text-[#031007] drop-shadow-[0_1px_0_rgba(255,255,255,0.18)]">
+						BANGER BATH LAUNCH 4/20
+					</span>
+					<span className="text-xs md:text-sm font-extrabold uppercase tracking-[0.18em] text-[#031007] drop-shadow-[0_1px_0_rgba(255,255,255,0.18)]">
+						BANGER BATH LAUNCH 4/20
+					</span>
+				</Marquee>
+			</div>
+			<div className="h-10" aria-hidden="true" />
 			{/* Hero Section */}
 			<HeroSection />
 
