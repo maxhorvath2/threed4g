@@ -13,7 +13,7 @@ const navigation = {
 	social: [
 		{
 			name: "Instagram",
-			href: "https://www.instagram.com/threed4g/",
+			href: "https://www.instagram.com/threed420/",
 			icon: (
 				<svg
 					className="w-5 h-5"

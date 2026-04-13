@@ -8,20 +8,28 @@ import {
 	useStripe,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import Navigation from "@/components/Navigation";
 import { Footer } from "@/components/layout/Footer";
 import { useCartStore } from "@/lib/store/cart";
+import type { PaymentMethod } from "@/lib/checkout";
 
 const stripePublishableKey =
 	process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 const stripePromise = stripePublishableKey
 	? loadStripe(stripePublishableKey)
 	: null;
+const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
+const defaultPayPalCurrency = String(
+	process.env.NEXT_PUBLIC_PAYPAL_CURRENCY ?? "aud",
+)
+	.trim()
+	.toLowerCase();
 const checkoutSessionStorageKey = "threed4g-checkout-session";
 
 interface LineItem {
 	productId: number;
-	variantId: number;
+	variantId: number | null;
 	productName: string;
 	variantName: string;
 	unitPrice: number;
@@ -37,6 +45,7 @@ interface ShippingForm {
 	state: string;
 	postalCode: string;
 	country: string;
+	customCountry: string;
 }
 
 interface OrderResponse {
@@ -47,9 +56,11 @@ interface OrderResponse {
 		customer_email?: string;
 		status: string;
 		payment_status?: string;
+		payment_method?: string;
 		stripe_payment_intent_id?: string | null;
 		subtotal: number;
 		shipping_amount?: number;
+		tariff_amount?: number;
 		total_amount?: number;
 		currency: string;
 		created_at: string;
@@ -62,11 +73,13 @@ interface SavedCheckoutSession {
 	shipping: ShippingForm;
 	shippingOptionId: string;
 	shippingOptionLabel: string;
+	paymentMethod: PaymentMethod;
 	clientSecret: string;
 	paymentIntentId: string;
 	lineItems: LineItem[];
 	subtotal: number;
 	shippingAmount: number;
+	tariffAmount: number;
 	totalAmount: number;
 	currency: string;
 }
@@ -88,6 +101,20 @@ interface AddressSuggestion {
 	country: string;
 }
 
+interface CountryOption {
+	code: string;
+	label: string;
+}
+
+const fallbackCountryOptions: CountryOption[] = [
+	{ code: "AU", label: "Australia" },
+	{ code: "NZ", label: "New Zealand" },
+	{ code: "US", label: "United States" },
+	{ code: "GB", label: "United Kingdom" },
+	{ code: "CA", label: "Canada" },
+	{ code: "OTHER", label: "Other" },
+];
+
 function defaultShipping(name = ""): ShippingForm {
 	return {
 		name,
@@ -98,10 +125,21 @@ function defaultShipping(name = ""): ShippingForm {
 		state: "",
 		postalCode: "",
 		country: "AU",
+		customCountry: "",
 	};
 }
 
+function resolveShippingCountry(shipping: ShippingForm): string {
+	if (shipping.country !== "OTHER") {
+		return shipping.country;
+	}
+
+	return shipping.customCountry;
+}
+
 function toShippingPayload(shipping: ShippingForm) {
+	const country = resolveShippingCountry(shipping).trim().toUpperCase();
+
 	return {
 		name: shipping.name,
 		phone: shipping.phone || null,
@@ -111,7 +149,7 @@ function toShippingPayload(shipping: ShippingForm) {
 			city: shipping.city,
 			state: shipping.state,
 			postal_code: shipping.postalCode,
-			country: shipping.country,
+			country,
 		},
 	};
 }
@@ -148,6 +186,31 @@ function loadSavedCheckoutSession(): SavedCheckoutSession | null {
 		window.localStorage.removeItem(checkoutSessionStorageKey);
 		return null;
 	}
+}
+
+function toPaymentMethod(value: unknown): PaymentMethod {
+	if (
+		value === "stripe" ||
+		value === "paypal" ||
+		value === "beem" ||
+		value === "contact"
+	) {
+		return value;
+	}
+
+	return "stripe";
+}
+
+function normalizeCheckoutCurrency(value: unknown): string {
+	const normalized = String(value ?? "")
+		.trim()
+		.toLowerCase();
+
+	if (normalized === defaultPayPalCurrency) {
+		return normalized;
+	}
+
+	return defaultPayPalCurrency;
 }
 
 function CheckoutPaymentForm({
@@ -220,6 +283,7 @@ function CheckoutPaymentForm({
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
+				paymentMethod: "stripe",
 				paymentIntentId,
 				customer: {
 					name: customerName,
@@ -299,6 +363,146 @@ function CheckoutPaymentForm({
 	);
 }
 
+function PayPalCheckoutForm({
+	customerName,
+	customerEmail,
+	shipping,
+	shippingOptionId,
+	lineItems,
+	totalAmount,
+	onSuccess,
+}: {
+	customerName: string;
+	customerEmail: string;
+	shipping: ShippingForm;
+	shippingOptionId: string;
+	lineItems: LineItem[];
+	totalAmount: number;
+	onSuccess: (order: OrderResponse["order"]) => void;
+}) {
+	const [error, setError] = useState<string | null>(null);
+
+	const paypalOptions = useMemo(
+		() => ({
+			clientId: paypalClientId,
+			"client-id": paypalClientId,
+			currency: defaultPayPalCurrency.toUpperCase(),
+			intent: "capture",
+			components: "buttons",
+			dataNamespace: `paypal_sdk_${defaultPayPalCurrency}`,
+		}),
+		[],
+	);
+
+	if (!paypalClientId) {
+		return (
+			<div className="rounded-xl border border-[#7f1d1d] bg-[#7f1d1d]/20 p-4 text-sm text-[#fca5a5]">
+				PayPal is not configured. Set NEXT_PUBLIC_PAYPAL_CLIENT_ID to
+				show the PayPal checkout buttons.
+			</div>
+		);
+	}
+
+	const buildOrderPayload = () => ({
+		customer: {
+			name: customerName,
+			email: customerEmail,
+		},
+		shipping: toShippingPayload(shipping),
+		shippingOptionId,
+		items: lineItems.map((item) => ({
+			id: `${item.productId}-${item.variantId}`,
+			productId: item.productId,
+			variantId: item.variantId,
+			quantity: item.quantity,
+		})),
+	});
+
+	const createOrder = async () => {
+		setError(null);
+		if (lineItems.length === 0) {
+			throw new Error(
+				"No checkout items were prepared for PayPal. Please go back and continue again.",
+			);
+		}
+		const response = await fetch("/api/paypal/orders", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(buildOrderPayload()),
+		});
+
+		const data = (await response.json()) as { id?: string; error?: string };
+		if (!response.ok || !data.id) {
+			throw new Error(data.error ?? "Failed to create PayPal order.");
+		}
+
+		return data.id;
+	};
+
+	const handleApprove = async (data: { orderID: string }) => {
+		setError(null);
+		const response = await fetch(
+			`/api/paypal/orders/${encodeURIComponent(data.orderID)}/capture`,
+			{
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					orderID: data.orderID,
+					paymentMethod: "paypal",
+					...buildOrderPayload(),
+				}),
+			},
+		);
+
+		const result = (await response.json()) as
+			| OrderResponse
+			| { error?: string };
+		if (!response.ok || !("success" in result) || !result.success) {
+			throw new Error(
+				"error" in result && result.error
+					? result.error
+					: "Failed to finalize PayPal payment.",
+			);
+		}
+
+		onSuccess(result.order);
+	};
+
+	return (
+		<PayPalScriptProvider
+			key={`paypal-sdk-${defaultPayPalCurrency}`}
+			options={paypalOptions}
+		>
+			<div className="space-y-4">
+				<PayPalButtons
+					style={{ layout: "vertical", label: "paypal" }}
+					forceReRender={[
+						defaultPayPalCurrency,
+						totalAmount,
+						shippingOptionId,
+						totalAmount,
+					]}
+					createOrder={createOrder}
+					onApprove={handleApprove}
+					onCancel={() => setError("PayPal checkout was cancelled.")}
+					onError={(paypalError) => {
+						setError(
+							paypalError instanceof Error
+								? paypalError.message
+								: "PayPal checkout failed.",
+						);
+					}}
+				/>
+				{error && (
+					<p className="text-sm text-[#fca5a5] border border-[#7f1d1d] bg-[#7f1d1d]/20 rounded-lg px-3 py-2">
+						{error}
+					</p>
+				)}
+			</div>
+		</PayPalScriptProvider>
+	);
+}
+
 export default function CheckoutPage() {
 	const { items, clearCart } = useCartStore();
 	const [hasMounted, setHasMounted] = useState(false);
@@ -307,6 +511,10 @@ export default function CheckoutPage() {
 	const [shipping, setShipping] = useState<ShippingForm>(defaultShipping());
 	const [shippingOptionId, setShippingOptionId] = useState("");
 	const [shippingOptionLabel, setShippingOptionLabel] = useState("Shipping");
+	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe");
+	const [countryOptions, setCountryOptions] = useState<CountryOption[]>(
+		fallbackCountryOptions,
+	);
 	const [availableShippingOptions, setAvailableShippingOptions] = useState<
 		LiveShippingOption[]
 	>([]);
@@ -323,7 +531,9 @@ export default function CheckoutPage() {
 	const [subtotal, setSubtotal] = useState(0);
 	const [shippingAmount, setShippingAmount] = useState(0);
 	const [totalAmount, setTotalAmount] = useState(0);
-	const [currency, setCurrency] = useState("usd");
+	const [currency, setCurrency] = useState(
+		normalizeCheckoutCurrency(defaultPayPalCurrency),
+	);
 	const [loadingIntent, setLoadingIntent] = useState(false);
 	const [cancelling, setCancelling] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -344,45 +554,49 @@ export default function CheckoutPage() {
 
 		setCustomerName(savedSession.customerName);
 		setCustomerEmail(savedSession.customerEmail);
-		setShipping(savedSession.shipping);
+		setShipping((current) => ({
+			...current,
+			...savedSession.shipping,
+			customCountry: String(savedSession.shipping.customCountry ?? ""),
+		}));
 		setShippingOptionId(String(savedSession.shippingOptionId ?? ""));
 		setShippingOptionLabel(
 			String(savedSession.shippingOptionLabel ?? "Shipping"),
 		);
+		const restoredPaymentMethod = toPaymentMethod(
+			savedSession.paymentMethod,
+		);
+		setPaymentMethod(restoredPaymentMethod);
 		setClientSecret(savedSession.clientSecret);
 		setPaymentIntentId(savedSession.paymentIntentId);
 		setLineItems(savedSession.lineItems);
 		setSubtotal(savedSession.subtotal);
 		setShippingAmount(savedSession.shippingAmount);
 		setTotalAmount(savedSession.totalAmount);
-		setCurrency(savedSession.currency);
-		setCheckoutStep(savedSession.clientSecret ? "payment" : "shipping");
+		setCurrency(normalizeCheckoutCurrency(savedSession.currency));
+		setCheckoutStep(
+			restoredPaymentMethod === "paypal" || savedSession.clientSecret
+				? "payment"
+				: "shipping",
+		);
 	}, []);
 
 	const hasItems = items.length > 0;
 	const hasVisibleItems = hasMounted && hasItems;
+	const resolvedShippingCountry = resolveShippingCountry(shipping)
+		.trim()
+		.toUpperCase();
 	const shippingReady =
 		shipping.name.trim() !== "" &&
 		shipping.line1.trim() !== "" &&
 		shipping.city.trim() !== "" &&
 		shipping.state.trim() !== "" &&
 		shipping.postalCode.trim() !== "" &&
-		shipping.country.trim() !== "";
+		resolvedShippingCountry !== "";
 	const canContinueToShipping =
 		customerName.trim() !== "" &&
 		customerEmail.trim() !== "" &&
 		shippingReady;
-	const normalizedShippingOptionId = String(shippingOptionId ?? "").trim();
-	const canInitializeCheckout =
-		canContinueToShipping && normalizedShippingOptionId !== "";
-	const selectedShippingOption = useMemo<LiveShippingOption | null>(
-		() =>
-			availableShippingOptions.find(
-				(option) => option.id === normalizedShippingOptionId,
-			) ?? null,
-		[availableShippingOptions, normalizedShippingOptionId],
-	);
-
 	const itemCount = useMemo(
 		() => items.reduce((total, item) => total + item.quantity, 0),
 		[items],
@@ -395,6 +609,73 @@ export default function CheckoutPage() {
 			),
 		[items],
 	);
+	const normalizedShippingOptionId = String(shippingOptionId ?? "").trim();
+	const usingManualShippingOption =
+		normalizedShippingOptionId === "manual_contact";
+	const tariffAmount = useMemo(
+		() =>
+			resolvedShippingCountry === "US"
+				? Math.round(cartSubtotal * 0.1 * 100) / 100
+				: 0,
+		[cartSubtotal, resolvedShippingCountry],
+	);
+	const canInitializeCheckout =
+		canContinueToShipping && normalizedShippingOptionId !== "";
+	const selectedShippingOption = useMemo<LiveShippingOption | null>(
+		() =>
+			availableShippingOptions.find(
+				(option) => option.id === normalizedShippingOptionId,
+			) ?? null,
+		[availableShippingOptions, normalizedShippingOptionId],
+	);
+
+	useEffect(() => {
+		const controller = new AbortController();
+
+		void (async () => {
+			try {
+				const response = await fetch("/api/shipping/countries", {
+					signal: controller.signal,
+					cache: "no-store",
+				});
+				if (!response.ok) {
+					return;
+				}
+
+				const data = (await response.json()) as {
+					countries?: CountryOption[];
+				};
+				const apiCountries = Array.isArray(data.countries)
+					? data.countries
+							.filter(
+								(country) =>
+									typeof country?.code === "string" &&
+									typeof country?.label === "string",
+							)
+							.map((country) => ({
+								code: country.code.toUpperCase(),
+								label: country.label,
+							}))
+							.filter((country) =>
+								/^[A-Z]{2}$/.test(country.code),
+							)
+					: [];
+
+				if (apiCountries.length > 0) {
+					setCountryOptions([
+						...apiCountries,
+						{ code: "OTHER", label: "Other" },
+					]);
+				}
+			} catch {
+				// Keep fallback country list when API is unavailable.
+			}
+		})();
+
+		return () => {
+			controller.abort();
+		};
+	}, []);
 
 	const resetPreparedPayment = () => {
 		setClientSecret(null);
@@ -451,7 +732,10 @@ export default function CheckoutPage() {
 	};
 
 	useEffect(() => {
-		if (shipping.country !== "AU" || addressLookupInput.trim().length < 2) {
+		if (
+			resolvedShippingCountry !== "AU" ||
+			addressLookupInput.trim().length < 2
+		) {
 			setAddressSuggestions([]);
 			return;
 		}
@@ -479,12 +763,69 @@ export default function CheckoutPage() {
 			window.clearTimeout(timeout);
 			controller.abort();
 		};
-	}, [addressLookupInput, shipping.country]);
+	}, [addressLookupInput, resolvedShippingCountry]);
 
 	const initializeCheckout = async () => {
 		if (!hasItems || !canInitializeCheckout || !selectedShippingOption) {
 			setError(
 				"Please complete your details and choose a shipping option before continuing.",
+			);
+			return;
+		}
+
+		if (paymentMethod === "paypal") {
+			const preparedLineItems: LineItem[] = items.map((item) => ({
+				productId: item.productId,
+				variantId: item.variantId,
+				productName: item.name,
+				variantName: item.variantName ?? item.name,
+				unitPrice: item.price,
+				quantity: item.quantity,
+			}));
+			const preparedShippingAmount = Number(
+				selectedShippingOption.amount.toFixed(2),
+			);
+			const preparedCurrency = defaultPayPalCurrency;
+
+			setLineItems(preparedLineItems);
+			setSubtotal(cartSubtotal);
+			setShippingAmount(preparedShippingAmount);
+			setTotalAmount(
+				cartSubtotal + preparedShippingAmount + tariffAmount,
+			);
+			setCurrency(preparedCurrency);
+			setShippingOptionLabel(selectedShippingOption.label);
+			setError(null);
+			setCheckoutStep("payment");
+			persistCheckoutSession({
+				customerName,
+				customerEmail,
+				shipping,
+				shippingOptionId: selectedShippingOption.id,
+				shippingOptionLabel: selectedShippingOption.label,
+				paymentMethod,
+				clientSecret: "",
+				paymentIntentId: "",
+				lineItems: preparedLineItems,
+				subtotal: cartSubtotal,
+				shippingAmount: preparedShippingAmount,
+				tariffAmount,
+				totalAmount:
+					cartSubtotal + preparedShippingAmount + tariffAmount,
+				currency: preparedCurrency,
+			});
+			setLoadingIntent(false);
+			return;
+		}
+
+		if (paymentMethod !== "stripe") {
+			await submitManualCheckout();
+			return;
+		}
+
+		if (usingManualShippingOption) {
+			setError(
+				"The no-postage option can only be used with PayPal, Beem, or contact checkout.",
 			);
 			return;
 		}
@@ -522,6 +863,7 @@ export default function CheckoutPage() {
 			shippingOption?: LiveShippingOption;
 			subtotal?: number;
 			shippingAmount?: number;
+			tariffAmount?: number;
 			totalAmount?: number;
 			currency?: string;
 			items?: LineItem[];
@@ -545,7 +887,8 @@ export default function CheckoutPage() {
 		setSubtotal(Number(data.subtotal ?? 0));
 		setShippingAmount(Number(data.shippingAmount ?? 0));
 		setTotalAmount(Number(data.totalAmount ?? 0));
-		setCurrency(String(data.currency ?? "usd"));
+		const resolvedCurrency = normalizeCheckoutCurrency(data.currency);
+		setCurrency(resolvedCurrency);
 		setShippingOptionLabel(
 			String(data.shippingOption?.label ?? selectedShippingOption.label),
 		);
@@ -557,16 +900,71 @@ export default function CheckoutPage() {
 			shippingOptionLabel: String(
 				data.shippingOption?.label ?? selectedShippingOption.label,
 			),
+			paymentMethod,
 			clientSecret: data.clientSecret,
 			paymentIntentId: data.paymentIntentId,
 			lineItems: data.items,
 			subtotal: Number(data.subtotal ?? 0),
 			shippingAmount: Number(data.shippingAmount ?? 0),
+			tariffAmount: Number(data.tariffAmount ?? tariffAmount),
 			totalAmount: Number(data.totalAmount ?? 0),
-			currency: String(data.currency ?? "usd"),
+			currency: resolvedCurrency,
 		});
 		setCheckoutStep("payment");
 		setLoadingIntent(false);
+	};
+
+	const submitManualCheckout = async () => {
+		if (!hasItems || !selectedShippingOption) {
+			setError("Please choose a shipping option before submitting.");
+			return;
+		}
+
+		setLoadingIntent(true);
+		setError(null);
+
+		try {
+			const response = await fetch("/api/checkout", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					paymentMethod,
+					customer: {
+						name: customerName,
+						email: customerEmail,
+					},
+					shipping: toShippingPayload(shipping),
+					shippingOptionId: selectedShippingOption.id,
+					items: items.map((item) => ({
+						id: item.id,
+						productId: item.productId,
+						variantId: item.variantId,
+						quantity: item.quantity,
+					})),
+				}),
+			});
+
+			const data = (await response.json()) as
+				| OrderResponse
+				| { error: string };
+			if (!response.ok || !("success" in data) || !data.success) {
+				throw new Error(
+					"error" in data && data.error
+						? data.error
+						: "Failed to submit order request.",
+				);
+			}
+
+			handleOrderSuccess(data.order);
+		} catch (submitError) {
+			setError(
+				submitError instanceof Error
+					? submitError.message
+					: "Failed to submit order request.",
+			);
+		} finally {
+			setLoadingIntent(false);
+		}
 	};
 
 	const handleOrderSuccess = (order: OrderResponse["order"]) => {
@@ -581,6 +979,7 @@ export default function CheckoutPage() {
 		setTotalAmount(0);
 		setShippingOptionId("");
 		setShippingOptionLabel("Shipping");
+		setPaymentMethod("stripe");
 		setCheckoutStep("details");
 	};
 
@@ -612,7 +1011,7 @@ export default function CheckoutPage() {
 		setSubtotal(0);
 		setShippingAmount(0);
 		setTotalAmount(0);
-		setCurrency("usd");
+		setCurrency(defaultPayPalCurrency);
 		setShippingOptionLabel("Shipping");
 		setCheckoutStep("details");
 		setCancelling(false);
@@ -633,8 +1032,9 @@ export default function CheckoutPage() {
 
 					{!stripePromise && (
 						<div className="border border-[#7f1d1d] bg-[#7f1d1d]/20 rounded-2xl p-4 mb-6 text-sm text-[#fca5a5]">
-							Stripe is not configured. Add your publishable and
-							secret keys to enable checkout.
+							Stripe card checkout is not configured. Manual
+							PayPal, Beem, and contact-based checkout are still
+							available.
 						</div>
 					)}
 
@@ -644,8 +1044,9 @@ export default function CheckoutPage() {
 								Order Submitted
 							</h2>
 							<p className="text-[#e5e5e5]">
-								Order #{completedOrder.id} has been paid and
-								submitted.
+								{completedOrder.payment_status === "paid"
+									? `Order #${completedOrder.id} has been paid and submitted.`
+									: `Order #${completedOrder.id} has been submitted. We’ll follow up with postage and payment details.`}
 							</p>
 							<p className="text-[#a3a3a3]">
 								A confirmation email has been sent to{" "}
@@ -740,6 +1141,11 @@ export default function CheckoutPage() {
 													setShipping((current) => ({
 														...current,
 														country: nextCountry,
+														customCountry:
+															nextCountry ===
+															"OTHER"
+																? current.customCountry
+																: "",
 													}));
 													setAddressLookupInput("");
 													setAddressSuggestions([]);
@@ -755,35 +1161,49 @@ export default function CheckoutPage() {
 												}}
 												className="w-full px-4 py-3 rounded-xl bg-[#0a0a0a] border border-[#262626] text-[#fafafa]"
 											>
-												<option value="AU">
-													Australia
-												</option>
-												<option value="NZ">
-													New Zealand
-												</option>
-												<option value="US">
-													United States
-												</option>
-												<option value="GB">
-													United Kingdom
-												</option>
-												<option value="CA">
-													Canada
-												</option>
-												<option value="SG">
-													Singapore
-												</option>
-												<option value="DE">
-													Germany
-												</option>
-												<option value="FR">
-													France
-												</option>
-												<option value="OTHER">
-													Other
-												</option>
+												{countryOptions.map(
+													(option) => (
+														<option
+															key={option.code}
+															value={option.code}
+														>
+															{option.label}
+														</option>
+													),
+												)}
 											</select>
 										</div>
+										{shipping.country === "OTHER" && (
+											<div>
+												<label className="block text-sm text-[#a3a3a3] mb-2">
+													Country Code
+												</label>
+												<input
+													type="text"
+													placeholder="e.g. JP, NL, BR"
+													value={
+														shipping.customCountry
+													}
+													onChange={(e) =>
+														setShipping(
+															(current) => ({
+																...current,
+																customCountry:
+																	e.target
+																		.value,
+															}),
+														)
+													}
+													className="w-full px-4 py-3 rounded-xl bg-[#0a0a0a] border border-[#262626] text-[#fafafa]"
+												/>
+												<p className="mt-2 text-xs text-[#737373]">
+													Use a 2-letter ISO country
+													code so live AusPost quotes
+													can be returned.
+												</p>
+											</div>
+										)}
+
 										<div className="md:col-span-2">
 											<label className="block text-sm text-[#a3a3a3] mb-2">
 												Address Line 1
@@ -1051,6 +1471,86 @@ export default function CheckoutPage() {
 											),
 										)}
 									</div>
+									<div className="pt-2 border-t border-[#1f1f1f] space-y-3">
+										<p className="text-xs uppercase tracking-[0.2em] text-[#737373]">
+											Payment Method
+										</p>
+										<div className="grid gap-3 md:grid-cols-2">
+											{(
+												[
+													{
+														id: "stripe",
+														label: "Stripe",
+														description:
+															"Pay now with Stripe, Zip, or Klarna",
+													},
+													{
+														id: "paypal",
+														label: "PayPal",
+														description:
+															"Pay now with PayPal",
+													},
+													{
+														id: "beem",
+														label: "Beem",
+														description:
+															"We’ll confirm payment by email",
+													},
+													{
+														id: "contact",
+														label: "Contact / quote",
+														description:
+															"We'll confirm payment and postage details by email",
+													},
+												] as Array<{
+													id: PaymentMethod;
+													label: string;
+													description: string;
+												}>
+											).map((method) => (
+												<label
+													key={method.id}
+													className={`block rounded-xl border p-4 cursor-pointer transition-colors ${paymentMethod === method.id ? "border-[#22c55e] bg-[#22c55e]/10" : "border-[#262626] bg-[#0a0a0a]"}`}
+												>
+													<div className="flex items-start gap-3">
+														<input
+															type="radio"
+															name="payment-method"
+															checked={
+																paymentMethod ===
+																method.id
+															}
+															onChange={() => {
+																setPaymentMethod(
+																	method.id,
+																);
+																resetPreparedPayment();
+															}}
+															className="mt-1"
+														/>
+														<div>
+															<p className="text-[#fafafa] font-medium">
+																{method.label}
+															</p>
+															<p className="text-sm text-[#737373]">
+																{
+																	method.description
+																}
+															</p>
+														</div>
+													</div>
+												</label>
+											))}
+										</div>
+										{usingManualShippingOption &&
+											paymentMethod === "stripe" && (
+												<p className="text-sm text-[#fbbf24]">
+													No-postage checkout requires
+													PayPal, Beem, or contact
+													mode.
+												</p>
+											)}
+									</div>
 									<div className="grid gap-3 md:grid-cols-2">
 										<button
 											type="button"
@@ -1068,14 +1568,19 @@ export default function CheckoutPage() {
 												loadingShippingOptions ||
 												loadingIntent ||
 												!selectedShippingOption ||
-												!stripePromise
+												(paymentMethod === "stripe" &&
+													usingManualShippingOption &&
+													!paymentIntentId)
 											}
 											className="w-full py-3 rounded-xl bg-[#22c55e] text-[#0a0a0a] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
 										>
 											{loadingShippingOptions ||
 											loadingIntent
 												? "Preparing Checkout..."
-												: "Continue To Payment"}
+												: paymentMethod === "stripe" ||
+													  paymentMethod === "paypal"
+													? "Continue to Payment"
+													: "Submit Request"}
 										</button>
 									</div>
 								</div>
@@ -1088,6 +1593,7 @@ export default function CheckoutPage() {
 							)}
 
 							{checkoutStep === "payment" &&
+								paymentMethod === "stripe" &&
 								clientSecret &&
 								paymentIntentId && (
 									<div className="border border-[#262626] bg-[#111111] rounded-2xl p-6 space-y-4">
@@ -1115,6 +1621,18 @@ export default function CheckoutPage() {
 													{currency.toUpperCase()}
 												</span>
 											</div>
+											{tariffAmount > 0 && (
+												<div className="flex items-center justify-between">
+													<span>US tariff</span>
+													<span>
+														$
+														{tariffAmount.toFixed(
+															2,
+														)}{" "}
+														{currency.toUpperCase()}
+													</span>
+												</div>
+											)}
 											<div className="flex items-center justify-between text-[#fafafa] font-semibold border-t border-[#1f1f1f] pt-2 mt-2">
 												<span>Total</span>
 												<span>
@@ -1188,6 +1706,71 @@ export default function CheckoutPage() {
 												Stripe is not configured yet.
 											</p>
 										)}
+
+										{cancelling && (
+											<p className="text-xs text-[#737373]">
+												Cancelling checkout...
+											</p>
+										)}
+									</div>
+								)}
+
+							{checkoutStep === "payment" &&
+								paymentMethod === "paypal" && (
+									<div className="border border-[#262626] bg-[#111111] rounded-2xl p-6 space-y-4">
+										<p className="text-xs uppercase tracking-[0.2em] text-[#737373]">
+											Step 3 · PayPal
+										</p>
+										<h2 className="text-xl text-[#fafafa] font-display">
+											Pay with PayPal
+										</h2>
+										<div className="rounded-xl border border-[#171717] bg-[#0a0a0a] p-4 space-y-2 text-sm text-[#a3a3a3]">
+											<div className="flex items-center justify-between">
+												<span>Subtotal</span>
+												<span>
+													${subtotal.toFixed(2)}{" "}
+													{currency.toUpperCase()}
+												</span>
+											</div>
+											<div className="flex items-center justify-between">
+												<span>Shipping</span>
+												<span>
+													{selectedShippingOption?.label ??
+														shippingOptionLabel}{" "}
+													· $
+													{shippingAmount.toFixed(2)}{" "}
+													{currency.toUpperCase()}
+												</span>
+											</div>
+											{tariffAmount > 0 && (
+												<div className="flex items-center justify-between">
+													<span>US tariff</span>
+													<span>
+														$
+														{tariffAmount.toFixed(
+															2,
+														)}{" "}
+														{currency.toUpperCase()}
+													</span>
+												</div>
+											)}
+											<div className="flex items-center justify-between text-[#fafafa] font-semibold border-t border-[#1f1f1f] pt-2 mt-2">
+												<span>Total</span>
+												<span>
+													${totalAmount.toFixed(2)}{" "}
+													{currency.toUpperCase()}
+												</span>
+											</div>
+										</div>
+										<PayPalCheckoutForm
+											customerName={customerName}
+											customerEmail={customerEmail}
+											shipping={shipping}
+											shippingOptionId={shippingOptionId}
+											lineItems={lineItems}
+											totalAmount={totalAmount}
+											onSuccess={handleOrderSuccess}
+										/>
 										{cancelling && (
 											<p className="text-xs text-[#737373]">
 												Cancelling checkout...

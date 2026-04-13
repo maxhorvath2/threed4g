@@ -34,6 +34,69 @@ function getCartItemId(productId: number, variantId: number | null): string {
 	return variantId ? `${productId}-${variantId}` : `${productId}`;
 }
 
+function isTransientDbError(error: unknown): boolean {
+	if (!(error instanceof Error)) {
+		return false;
+	}
+
+	const message = error.message.toLowerCase();
+	const cause =
+		typeof error === "object" && error !== null && "cause" in error
+			? (error as { cause?: unknown }).cause
+			: undefined;
+	const causeCode =
+		typeof cause === "object" && cause !== null && "code" in cause
+			? String((cause as { code?: unknown }).code ?? "")
+			: "";
+
+	return (
+		message.includes("fetch failed") ||
+		message.includes("connect timeout") ||
+		causeCode === "UND_ERR_CONNECT_TIMEOUT"
+	);
+}
+
+async function resolveVariantRows(
+	variantIds: number[],
+	fallbackProductIds: number[],
+) {
+	const maxAttempts = 3;
+
+	for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+		try {
+			const result = await Promise.all([
+				variantIds.length > 0
+					? sql`
+          SELECT id, product_id, name, stock_quantity
+          FROM product_variants
+          WHERE id = ANY(${variantIds})
+        `
+					: Promise.resolve([]),
+				fallbackProductIds.length > 0
+					? sql`
+          SELECT DISTINCT ON (product_id) id, product_id, name, stock_quantity
+          FROM product_variants
+          WHERE product_id = ANY(${fallbackProductIds})
+          ORDER BY product_id, sort_order ASC, id ASC
+        `
+					: Promise.resolve([]),
+			]);
+
+			return result;
+		} catch (error) {
+			if (!isTransientDbError(error) || attempt === maxAttempts) {
+				throw error;
+			}
+
+			await new Promise((resolve) => {
+				setTimeout(resolve, 250 * attempt);
+			});
+		}
+	}
+
+	throw new Error("Failed to resolve variant rows");
+}
+
 export async function POST(request: NextRequest) {
 	try {
 		const body = await request.json();
@@ -76,23 +139,10 @@ export async function POST(request: NextRequest) {
 			),
 		);
 
-		const [variantRows, fallbackRows] = await Promise.all([
-			variantIds.length > 0
-				? sql`
-          SELECT id, product_id, name, stock_quantity
-          FROM product_variants
-          WHERE id = ANY(${variantIds})
-        `
-				: Promise.resolve([]),
-			fallbackProductIds.length > 0
-				? sql`
-          SELECT DISTINCT ON (product_id) id, product_id, name, stock_quantity
-          FROM product_variants
-          WHERE product_id = ANY(${fallbackProductIds})
-          ORDER BY product_id, sort_order ASC, id ASC
-        `
-				: Promise.resolve([]),
-		]);
+		const [variantRows, fallbackRows] = await resolveVariantRows(
+			variantIds,
+			fallbackProductIds,
+		);
 
 		const variantById = new Map<number, VariantStockRow>(
 			(variantRows as VariantStockRow[]).map((variant) => [

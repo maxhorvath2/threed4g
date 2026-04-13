@@ -164,13 +164,13 @@ export async function getAusPostShippingOptions(
 	}
 
 	const weightKg =
-		input.weightKg ?? Number(process.env.AUSPOST_DEFAULT_WEIGHT_KG ?? 1);
+		input.weightKg ?? Number(process.env.AUSPOST_DEFAULT_WEIGHT_KG ?? 3);
 	const lengthCm =
-		input.lengthCm ?? Number(process.env.AUSPOST_DEFAULT_LENGTH_CM ?? 22);
+		input.lengthCm ?? Number(process.env.AUSPOST_DEFAULT_LENGTH_CM ?? 40);
 	const widthCm =
-		input.widthCm ?? Number(process.env.AUSPOST_DEFAULT_WIDTH_CM ?? 16);
+		input.widthCm ?? Number(process.env.AUSPOST_DEFAULT_WIDTH_CM ?? 29);
 	const heightCm =
-		input.heightCm ?? Number(process.env.AUSPOST_DEFAULT_HEIGHT_CM ?? 7);
+		input.heightCm ?? Number(process.env.AUSPOST_DEFAULT_HEIGHT_CM ?? 14);
 
 	let url = "";
 	if (countryCode === "AU") {

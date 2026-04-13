@@ -35,6 +35,8 @@ export interface ShippingOption {
 	countries: string[];
 }
 
+export type PaymentMethod = "stripe" | "paypal" | "beem" | "contact";
+
 const SHIPPING_OPTIONS: ShippingOption[] = [
 	{
 		id: "auspost_standard",
@@ -131,6 +133,36 @@ export function calculateShippingAmount(countryCode: string): number {
 		return 18;
 	}
 	return 25;
+}
+
+export function getShippingQuoteMultiplier(countryCode: string): number {
+	const country = String(countryCode ?? "")
+		.trim()
+		.toUpperCase();
+	return country === "US" ? 1 : 1;
+}
+
+export function adjustShippingQuote(
+	amount: number,
+	countryCode: string,
+): number {
+	return (
+		Math.round(amount * getShippingQuoteMultiplier(countryCode) * 100) / 100
+	);
+}
+
+export function calculateTariffAmount(
+	subtotal: number,
+	countryCode: string,
+): number {
+	const country = String(countryCode ?? "")
+		.trim()
+		.toUpperCase();
+	if (country !== "US") {
+		return 0;
+	}
+
+	return Math.round(subtotal * 0.1 * 100) / 100;
 }
 
 export function getShippingOptionsForCountry(

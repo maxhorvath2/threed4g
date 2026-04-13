@@ -78,7 +78,7 @@ export function ProductsContent({ products }: ProductsContentProps) {
 
 			<div className="max-w-7xl mx-auto px-6">
 				{/* Header */}
-				<div className="gallery-header text-center mb-16">
+				<div className="gallery-header text-center mb-8 gap-2 flex flex-col items-center">
 					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">
 						Our Collection
 					</span>
@@ -87,7 +87,17 @@ export function ProductsContent({ products }: ProductsContentProps) {
 					</h1>
 					<p className="text-lg text-[#a3a3a3] max-w-2xl mx-auto">
 						Browse our complete collection of precision-engineered
-						3D printed accessories for your grow tent setup.
+						3D printed accessories for your grow tent setup. For any
+						custom requests or inquiries, please don&apos;t hesitate
+						to reach out to us through our contact page or
+						Instagram!
+					</p>
+
+					<p className="text-sm text-[#737373] mt-4 w-2xl">
+						Please note that this store is still under construction,
+						and if you run into any issues or are interested in an
+						unavailable product, please feel free to contact us
+						through the contact page or our instagram!
 					</p>
 				</div>
 

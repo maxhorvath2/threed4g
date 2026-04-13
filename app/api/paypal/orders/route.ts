@@ -1,9 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
-import {
-	getAusPostShippingOptions,
-	type LiveShippingOption,
-} from "@/lib/auspost";
 import {
 	adjustShippingQuote,
 	calculateTariffAmount,
@@ -11,8 +6,9 @@ import {
 	isValidEmail,
 	normalizeCheckoutItems,
 	normalizeShippingAddress,
-	type ResolvedCheckoutItem,
 } from "@/lib/checkout";
+import { getAusPostShippingOptions } from "@/lib/auspost";
+import { createPayPalOrder } from "@/lib/paypal";
 import { sql } from "@/lib/db";
 
 interface ResolvedVariantRow {
@@ -26,14 +22,6 @@ interface ResolvedVariantRow {
 
 export async function POST(request: NextRequest) {
 	try {
-		if (!process.env.STRIPE_SECRET_KEY) {
-			return NextResponse.json(
-				{ error: "Stripe is not configured" },
-				{ status: 500 },
-			);
-		}
-
-		const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 		const body = (await request.json()) as Record<string, unknown>;
 		const rawCustomer = (body.customer ?? {}) as Record<string, unknown>;
 		const customerName = String(rawCustomer.name ?? "").trim();
@@ -56,59 +44,43 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const liveShippingOptions = await getAusPostShippingOptions({
-			countryCode: shipping.address.country,
-			toPostcode: shipping.address.postal_code,
-		});
-
-		if (liveShippingOptions.length === 0) {
-			return NextResponse.json(
-				{
-					error: "No live shipping options are available for this destination",
-				},
-				{ status: 409 },
-			);
-		}
-
 		const shippingOptionId = String(body.shippingOptionId ?? "").trim();
 		if (!shippingOptionId) {
 			return NextResponse.json(
 				{
-					error: "A shipping option is required",
-					shippingOptions: liveShippingOptions,
+					error: "A shipping option is required for PayPal checkout",
 				},
 				{ status: 400 },
 			);
 		}
 
-		if (shippingOptionId === "manual_contact") {
+		let resolvedShippingOption: {
+			id: string;
+			label: string;
+			description: string;
+			amount: number;
+			serviceCode: string;
+		} | null = null;
+
+		if (shippingOptionId !== "manual_contact") {
+			const options = await getAusPostShippingOptions({
+				countryCode: shipping.address.country,
+				toPostcode: shipping.address.postal_code,
+			});
+			resolvedShippingOption =
+				options.find((option) => option.id === shippingOptionId) ??
+				null;
+		}
+
+		if (shippingOptionId !== "manual_contact" && !resolvedShippingOption) {
 			return NextResponse.json(
-				{
-					error: "Contact-based postage is only available with the manual payment flow.",
-				},
+				{ error: "Invalid shipping option for this destination" },
 				{ status: 400 },
 			);
 		}
-
-		const shippingOption =
-			liveShippingOptions.find(
-				(option) => option.id === shippingOptionId,
-			) ?? null;
-		if (!shippingOption) {
-			return NextResponse.json(
-				{
-					error: "Invalid shipping option for this destination",
-					shippingOptions: liveShippingOptions,
-				},
-				{ status: 400 },
-			);
-		}
-
-		const selectedShippingOption: LiveShippingOption = shippingOption;
 
 		const rawItems = Array.isArray(body.items) ? body.items : [];
 		const requestedItems = normalizeCheckoutItems(rawItems);
-
 		if (requestedItems.length === 0) {
 			return NextResponse.json(
 				{ error: "At least one checkout item is required" },
@@ -170,7 +142,15 @@ export async function POST(request: NextRequest) {
 			]),
 		);
 
-		const resolvedLineItems: ResolvedCheckoutItem[] = [];
+		const lineItems = [] as Array<{
+			productId: number;
+			variantId: number;
+			productName: string;
+			variantName: string;
+			unitPrice: number;
+			quantity: number;
+		}>;
+
 		for (const item of requestedItems) {
 			const resolved =
 				item.variantId !== null
@@ -184,20 +164,14 @@ export async function POST(request: NextRequest) {
 				);
 			}
 
-			const stockQuantity = Number(resolved.stock_quantity ?? 0);
-			if (stockQuantity < item.quantity) {
+			if (Number(resolved.stock_quantity ?? 0) < item.quantity) {
 				return NextResponse.json(
-					{
-						error: "Insufficient stock for one or more items",
-						variantId: resolved.id,
-						availableQuantity: stockQuantity,
-						requestedQuantity: item.quantity,
-					},
+					{ error: "Insufficient stock for one or more items" },
 					{ status: 409 },
 				);
 			}
 
-			resolvedLineItems.push({
+			lineItems.push({
 				productId: resolved.product_id,
 				variantId: resolved.id,
 				productName: resolved.product_name,
@@ -207,82 +181,49 @@ export async function POST(request: NextRequest) {
 			});
 		}
 
-		const aggregatedItems = Array.from(
-			resolvedLineItems.reduce((accumulator, item) => {
-				const existing = accumulator.get(item.variantId);
-				if (existing) {
-					existing.quantity += item.quantity;
-					return accumulator;
-				}
-
-				accumulator.set(item.variantId, { ...item });
-				return accumulator;
-			}, new Map<number, ResolvedCheckoutItem>()),
-		).map(([, item]) => item);
-
-		const subtotal = aggregatedItems.reduce(
+		const subtotal = lineItems.reduce(
 			(total, item) => total + item.unitPrice * item.quantity,
 			0,
 		);
-		const shippingAmount = adjustShippingQuote(
-			selectedShippingOption.amount,
-			shipping.address.country,
-		);
+		const shippingAmount = resolvedShippingOption
+			? adjustShippingQuote(
+					resolvedShippingOption.amount,
+					shipping.address.country,
+				)
+			: 0;
 		const tariffAmount = calculateTariffAmount(
 			subtotal,
 			shipping.address.country,
 		);
 		const totalAmount = subtotal + shippingAmount + tariffAmount;
 		const currency = getCheckoutCurrency();
-		const amount = Math.round(totalAmount * 100);
 
-		if (amount <= 0) {
-			return NextResponse.json(
-				{ error: "Checkout amount must be greater than zero" },
-				{ status: 400 },
-			);
-		}
-
-		const paymentIntent = await stripe.paymentIntents.create({
-			amount,
+		const order = await createPayPalOrder({
 			currency,
-			automatic_payment_methods: { enabled: true },
-			receipt_email: customerEmail,
-			metadata: {
-				customer_name: customerName,
-				customer_email: customerEmail,
-				item_count: String(aggregatedItems.length),
-				shipping_country: shipping.address.country,
-				shipping_option_id: selectedShippingOption.id,
-				shipping_option_label: selectedShippingOption.label,
-				shipping_option_service_code:
-					selectedShippingOption.serviceCode,
-				tariff_amount: String(tariffAmount),
-			},
+			totalAmount,
+			subtotal,
+			shippingAmount,
+			tariffAmount,
+			items: lineItems.map((item) => ({
+				name: `${item.productName}${item.variantName ? ` - ${item.variantName}` : ""}`,
+				quantity: item.quantity,
+				unitPrice: item.unitPrice,
+			})),
+			description: "ThreeD4G checkout",
 		});
 
-		if (!paymentIntent.client_secret) {
-			return NextResponse.json(
-				{ error: "Failed to initialize payment session" },
-				{ status: 500 },
-			);
-		}
-
 		return NextResponse.json({
-			clientSecret: paymentIntent.client_secret,
-			paymentIntentId: paymentIntent.id,
-			shippingOption: selectedShippingOption,
+			id: order.id,
 			currency,
 			subtotal,
 			shippingAmount,
 			tariffAmount,
 			totalAmount,
-			items: aggregatedItems,
 		});
 	} catch (error) {
-		console.error("Error creating payment intent:", error);
+		console.error("Error creating PayPal order:", error);
 		return NextResponse.json(
-			{ error: "Failed to create payment intent" },
+			{ error: "Failed to create PayPal order" },
 			{ status: 500 },
 		);
 	}

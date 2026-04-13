@@ -17,6 +17,7 @@ export interface OrderWithItems {
 	customer_email: string;
 	status: string;
 	payment_status: string;
+	payment_method?: string;
 	stripe_payment_intent_id: string | null;
 	shipping_name?: string;
 	shipping_phone?: string | null;
@@ -32,6 +33,7 @@ export interface OrderWithItems {
 	currency: string;
 	subtotal: number;
 	shipping_amount?: number;
+	tariff_amount?: number;
 	total_amount?: number;
 	created_at: string;
 	items: OrderItem[];
@@ -40,4 +42,5 @@ export interface OrderWithItems {
 export interface OrderDetail extends OrderWithItems {
 	total_amount: number;
 	shipping_amount: number;
+	tariff_amount: number;
 }

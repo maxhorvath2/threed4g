@@ -299,7 +299,7 @@ export function CartDrawer() {
 										Contact Form
 									</Link>
 									<a
-										href="https://www.instagram.com/threed4g/"
+										href="https://www.instagram.com/threed420/"
 										target="_blank"
 										rel="noopener noreferrer"
 										className="flex items-center gap-2 text-sm text-[#22c55e] hover:text-[#4ade80] transition-colors"
@@ -307,12 +307,12 @@ export function CartDrawer() {
 											posthog?.capture(
 												"cart_instagram_link_clicked",
 												{
-													url: "https://www.instagram.com/threed4g/",
+													url: "https://www.instagram.com/threed420/",
 												},
 											)
 										}
 									>
-										Instagram @threed4g
+										Instagram @threed420
 									</a>
 								</div>
 							</div>
