@@ -19,6 +19,7 @@ export async function POST(
 		const { id } = await params;
 		const body = (await request.json()) as Record<string, unknown>;
 		const bodyOrderId = String(body.orderID ?? body.orderId ?? "").trim();
+		const checkoutSessionId = String(body.checkoutSessionId ?? "").trim();
 		const paymentMethod = String(body.paymentMethod ?? "paypal")
 			.trim()
 			.toLowerCase() as PaymentMethod;
@@ -108,6 +109,7 @@ export async function POST(
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					paymentMethod,
+					checkoutSessionId,
 					paypalOrderId: capture.id,
 					paypalCaptureId: capture.captureId,
 					customer: {

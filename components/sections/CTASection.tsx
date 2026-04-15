@@ -42,32 +42,35 @@ export function CTASection() {
 			<div className="relative max-w-4xl mx-auto px-6 text-center">
 				<div ref={contentRef}>
 					{/* Badge */}
-					<div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#22c55e]/20 bg-[#22c55e]/5 mb-8">
-						<span className="text-sm text-[#22c55e] font-medium">
-							Custom Orders Available
+					<div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#22c55e]/30 bg-[#22c55e]/8 mb-8">
+						<span className="relative flex h-2 w-2">
+							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-60" />
+							<span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]" />
+						</span>
+						<span className="text-xs font-bold text-[#22c55e] tracking-[0.2em] uppercase">
+							4/20 Drop · Now Live
 						</span>
 					</div>
 
 					{/* Heading */}
 					<h2 className="text-headline text-[#fafafa] mb-6">
-						Need Something{" "}
-						<span className="text-[#22c55e]">Custom?</span>
+						Grab Yours Before{" "}
+						<span className="text-[#22c55e]">It&apos;s Gone.</span>
 					</h2>
 
 					{/* Description */}
 					<p className="text-lg text-[#a3a3a3] mb-10 max-w-2xl mx-auto leading-relaxed">
-						We love a challenge. Tell us about your setup and
-						we&apos;ll design a solution that fits perfectly. From
-						mounting brackets to organisation systems, if you can
-						imagine it, we can print it.
+						Limited first-run stock. Once it&apos;s out, it&apos;s out.
+						Keep your banger clean, your hits pure, and your setup
+						looking fresh — or hit us up if you need something made to order.
 					</p>
 
 					{/* CTA Buttons */}
 					<div className="flex flex-col sm:flex-row gap-4 justify-center">
 						<MagneticButton strength={0.15}>
 							<Button asChild size="lg">
-								<Link href="/contact">
-									Start a Conversation
+								<Link href="/products">
+									Shop The Drop
 									<svg
 										className="w-5 h-5"
 										fill="none"
@@ -78,7 +81,7 @@ export function CTASection() {
 											strokeLinecap="round"
 											strokeLinejoin="round"
 											strokeWidth={2}
-											d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+											d="M17 8l4 4m0 0l-4 4m4-4H3"
 										/>
 									</svg>
 								</Link>
@@ -87,7 +90,7 @@ export function CTASection() {
 
 						<MagneticButton strength={0.15}>
 							<Button asChild variant="ghost" size="lg">
-								<Link href="/products">Browse Products</Link>
+								<Link href="/contact">Get In Touch</Link>
 							</Button>
 						</MagneticButton>
 					</div>

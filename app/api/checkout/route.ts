@@ -14,6 +14,11 @@ import {
 	normalizeShippingAddress,
 	type PaymentMethod,
 } from "@/lib/checkout";
+import {
+	completeStockSession,
+	ensureStockReservationTables,
+	getSessionReservationQuantities,
+} from "@/lib/stockReservation";
 import { sql } from "@/lib/db";
 
 interface ResolvedVariantRow {
@@ -237,6 +242,7 @@ export async function POST(request: NextRequest) {
 		const paymentIntentId = String(body.paymentIntentId ?? "").trim();
 		const paypalOrderId = String(body.paypalOrderId ?? "").trim();
 		const paypalCaptureId = String(body.paypalCaptureId ?? "").trim();
+		const checkoutSessionId = String(body.checkoutSessionId ?? "").trim();
 		const paymentReferenceId =
 			paymentMethod === "paypal" ? paypalCaptureId : paymentIntentId;
 		const rawCustomer = (body.customer ?? {}) as Record<string, unknown>;
@@ -322,6 +328,7 @@ export async function POST(request: NextRequest) {
 				: (selectedShippingOption?.label ?? "Shipping");
 
 		await ensureOrderTables();
+		await ensureStockReservationTables();
 
 		const rawItems = Array.isArray(body.items) ? body.items : [];
 		const requestedItems = normalizeCheckoutItems(rawItems);
@@ -331,6 +338,10 @@ export async function POST(request: NextRequest) {
 				{ status: 400 },
 			);
 		}
+
+		const reservationQuantities = checkoutSessionId
+			? await getSessionReservationQuantities(checkoutSessionId)
+			: new Map<number, number>();
 
 		const existingOrder =
 			paymentMethod === "paypal"
@@ -347,6 +358,9 @@ export async function POST(request: NextRequest) {
 			LIMIT 1
 		`;
 		if (existingOrder.length > 0) {
+			if (checkoutSessionId) {
+				await completeStockSession(checkoutSessionId);
+			}
 			return NextResponse.json(
 				{ success: true, order: existingOrder[0] },
 				{ status: 200 },
@@ -434,15 +448,21 @@ export async function POST(request: NextRequest) {
 
 			const stockQuantity = Number(resolved.stock_quantity ?? 0);
 			if (stockQuantity < item.quantity) {
-				return NextResponse.json(
-					{
-						error: "Insufficient stock for one or more items",
-						variantId: resolved.id,
-						availableQuantity: stockQuantity,
-						requestedQuantity: item.quantity,
-					},
-					{ status: 409 },
-				);
+				const reservedQuantity =
+					reservationQuantities.get(resolved.id) ?? 0;
+				if (stockQuantity + reservedQuantity >= item.quantity) {
+					// The shortfall is covered by this checkout's active reservation.
+				} else {
+					return NextResponse.json(
+						{
+							error: "Insufficient stock for one or more items",
+							variantId: resolved.id,
+							availableQuantity: stockQuantity,
+							requestedQuantity: item.quantity,
+						},
+						{ status: 409 },
+					);
+				}
 			}
 
 			const existing = aggregatedByVariant.get(resolved.id);
@@ -692,6 +712,10 @@ export async function POST(request: NextRequest) {
 				]);
 			}
 
+			if (checkoutSessionId) {
+				await completeStockSession(checkoutSessionId);
+			}
+
 			return NextResponse.json(
 				{
 					success: true,
@@ -724,6 +748,9 @@ export async function POST(request: NextRequest) {
 
 		const orderVariantIds = lineItems.map((item) => item.variantId);
 		const orderQuantities = lineItems.map((item) => item.quantity);
+		const orderReservedQuantities = lineItems.map(
+			(item) => reservationQuantities.get(item.variantId) ?? 0,
+		);
 		const orderProductIds = lineItems.map((item) => item.productId);
 		const orderProductNames = lineItems.map((item) => item.productName);
 		const orderVariantNames = lineItems.map((item) => item.variantName);
@@ -734,14 +761,16 @@ export async function POST(request: NextRequest) {
         SELECT *
         FROM unnest(
           ${orderVariantIds}::int[],
-          ${orderQuantities}::int[]
-        ) AS t(variant_id, quantity)
+		  ${orderQuantities}::int[],
+		  ${orderReservedQuantities}::int[]
+		) AS t(variant_id, quantity, reserved_quantity)
       ),
       locked AS (
         SELECT
           pv.id AS variant_id,
           pv.stock_quantity,
-          requested.quantity
+		  requested.quantity,
+		  requested.reserved_quantity
         FROM requested
         JOIN product_variants pv ON pv.id = requested.variant_id
         FOR UPDATE OF pv
@@ -749,7 +778,7 @@ export async function POST(request: NextRequest) {
       all_ok AS (
         SELECT
           COUNT(*) = (SELECT COUNT(*) FROM requested)
-          AND COALESCE(BOOL_AND(stock_quantity >= quantity), false) AS ok
+		  AND COALESCE(BOOL_AND(stock_quantity + reserved_quantity >= quantity), false) AS ok
         FROM locked
       ),
       new_order AS (
@@ -806,8 +835,8 @@ export async function POST(request: NextRequest) {
       updated_stock AS (
         UPDATE product_variants pv
         SET
-          stock_quantity = pv.stock_quantity - locked.quantity,
-          in_stock = (pv.stock_quantity - locked.quantity) > 0
+		  stock_quantity = pv.stock_quantity - GREATEST(locked.quantity - locked.reserved_quantity, 0),
+		  in_stock = (pv.stock_quantity - GREATEST(locked.quantity - locked.reserved_quantity, 0)) > 0
         FROM locked, all_ok
         WHERE all_ok.ok AND pv.id = locked.variant_id
         RETURNING pv.id
@@ -880,6 +909,9 @@ export async function POST(request: NextRequest) {
         LIMIT 1
       `;
 			if (existingAfterConflict.length > 0) {
+				if (checkoutSessionId) {
+					await completeStockSession(checkoutSessionId);
+				}
 				return NextResponse.json(
 					{ success: true, order: existingAfterConflict[0] },
 					{ status: 200 },
@@ -1000,6 +1032,10 @@ export async function POST(request: NextRequest) {
 					});
 				}
 			});
+		}
+
+		if (checkoutSessionId) {
+			await completeStockSession(checkoutSessionId);
 		}
 
 		return NextResponse.json(

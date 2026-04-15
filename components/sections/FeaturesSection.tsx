@@ -12,13 +12,13 @@ const features = [
 					strokeLinecap="round"
 					strokeLinejoin="round"
 					strokeWidth={1.5}
-					d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+					d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
 				/>
 			</svg>
 		),
-		title: "Precision Design",
+		title: "Dial In the Clean",
 		description:
-			"Every product is meticulously engineered using advanced CAD software, ensuring perfect fit and optimal performance in grow tent environments.",
+			"The adjustable knob controls how hard the ISO gets pushed through your piece. Caked-on residue? Crank it up. Light maintenance? Back it off. You're in control.",
 	},
 	{
 		icon: (
@@ -31,9 +31,9 @@ const features = [
 				/>
 			</svg>
 		),
-		title: "Premium Materials",
+		title: "Fits Like a Bong",
 		description:
-			"Built with high-grade PETG and ASA filaments that withstand humidity, heat, and the unique conditions of indoor growing environments.",
+			"Your piece drops into the bath the same way it fits into a bong — that joint connection you already know. No adapters, no fiddling, no improvising.",
 	},
 	{
 		icon: (
@@ -42,13 +42,13 @@ const features = [
 					strokeLinecap="round"
 					strokeLinejoin="round"
 					strokeWidth={1.5}
-					d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"
+					d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
 				/>
 			</svg>
 		),
-		title: "Custom Solutions",
+		title: "Sealed & Solvent-Ready",
 		description:
-			"Need something unique? We collaborate with growers to create bespoke solutions tailored to your specific setup and requirements.",
+			"The lid locks everything down so the ISO stays where it should. High-grade PETG handles isopropyl daily without warping, clouding, or cracking.",
 	},
 ];
 
@@ -108,13 +108,13 @@ export function FeaturesSection() {
 			<div className="max-w-7xl mx-auto px-6">
 				{/* Section Header */}
 				<div className="features-heading text-center max-w-3xl mx-auto mb-20">
-					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">Why Choose Us</span>
+					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">Why It Slaps</span>
 					<h2 className="text-headline text-[#fafafa] mb-6">
-						Engineered for <span className="text-[#22c55e]">Excellence</span>
+						Every Detail <span className="text-[#22c55e]">Matters</span>
 					</h2>
 					<p className="text-lg text-[#a3a3a3] leading-relaxed">
-						We combine cutting-edge 3D printing technology with deep understanding of grow tent environments to deliver products
-						that actually work.
+						Drop your piece in, fill with ISO, close the lid, and dial the knob.
+						That&apos;s the whole process — no soaking overnight, no scrubbing residue off your banger.
 					</p>
 				</div>
 

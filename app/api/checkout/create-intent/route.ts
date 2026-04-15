@@ -106,6 +106,13 @@ export async function POST(request: NextRequest) {
 
 		const selectedShippingOption: LiveShippingOption = shippingOption;
 
+		// When a checkoutSessionId is present, stock has already been reserved
+		// (decremented) by /api/checkout/session. Skip the quantity check so that
+		// the already-decremented stock_quantity does not incorrectly reject the
+		// request.
+		const checkoutSessionId = String(body.checkoutSessionId ?? "").trim();
+		const stockAlreadyReserved = checkoutSessionId !== "";
+
 		const rawItems = Array.isArray(body.items) ? body.items : [];
 		const requestedItems = normalizeCheckoutItems(rawItems);
 
@@ -184,17 +191,19 @@ export async function POST(request: NextRequest) {
 				);
 			}
 
-			const stockQuantity = Number(resolved.stock_quantity ?? 0);
-			if (stockQuantity < item.quantity) {
-				return NextResponse.json(
-					{
-						error: "Insufficient stock for one or more items",
-						variantId: resolved.id,
-						availableQuantity: stockQuantity,
-						requestedQuantity: item.quantity,
-					},
-					{ status: 409 },
-				);
+			if (!stockAlreadyReserved) {
+				const stockQuantity = Number(resolved.stock_quantity ?? 0);
+				if (stockQuantity < item.quantity) {
+					return NextResponse.json(
+						{
+							error: "Insufficient stock for one or more items",
+							variantId: resolved.id,
+							availableQuantity: stockQuantity,
+							requestedQuantity: item.quantity,
+						},
+						{ status: 409 },
+					);
+				}
 			}
 
 			resolvedLineItems.push({

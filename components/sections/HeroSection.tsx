@@ -2,259 +2,258 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { gsap } from "@/lib/gsap";
 import { Button } from "@/components/ui/Button";
 import { MagneticButton } from "@/components/animations/MagneticButton";
 
 export function HeroSection() {
 	const sectionRef = useRef<HTMLElement>(null);
-	const titleRef = useRef<HTMLHeadingElement>(null);
-	const subtitleRef = useRef<HTMLParagraphElement>(null);
-	const buttonsRef = useRef<HTMLDivElement>(null);
-	const orb1Ref = useRef<HTMLDivElement>(null);
-	const orb2Ref = useRef<HTMLDivElement>(null);
-	const orb3Ref = useRef<HTMLDivElement>(null);
+	const textRef = useRef<HTMLDivElement>(null);
+	const imageRef = useRef<HTMLDivElement>(null);
+	const glowRef = useRef<HTMLDivElement>(null);
+	const lineRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const ctx = gsap.context(() => {
-			// Initial states
-			gsap.set(
-				[titleRef.current, subtitleRef.current, buttonsRef.current],
-				{
-					opacity: 0,
-					y: 60,
-				},
-			);
-
-			// Create timeline
-			const tl = gsap.timeline({ delay: 0.3 });
-
-			// Animate title words
-			if (titleRef.current) {
-				const words = titleRef.current.querySelectorAll(".word");
-				gsap.set(words, { y: 100, opacity: 0 });
-
-				tl.to(titleRef.current, { opacity: 1, y: 0, duration: 0 }).to(
-					words,
+			// Stagger the text children in
+			if (textRef.current) {
+				const kids = Array.from(textRef.current.children);
+				gsap.fromTo(
+					kids,
+					{ opacity: 0, y: 32 },
 					{
-						y: 0,
 						opacity: 1,
-						duration: 1,
-						stagger: 0.08,
-						ease: "power4.out",
+						y: 0,
+						duration: 0.8,
+						stagger: 0.09,
+						ease: "power3.out",
+						delay: 0.25,
 					},
 				);
 			}
 
-			// Animate subtitle
-			tl.to(
-				subtitleRef.current,
+			// Image slides in from the right
+			gsap.fromTo(
+				imageRef.current,
+				{ opacity: 0, x: 48, scale: 0.96 },
 				{
 					opacity: 1,
-					y: 0,
-					duration: 0.8,
+					x: 0,
+					scale: 1,
+					duration: 1.2,
 					ease: "power3.out",
+					delay: 0.4,
 				},
-				"-=0.5",
 			);
 
-			// Animate buttons
-			tl.to(
-				buttonsRef.current,
+			// Glow breathes
+			gsap.to(glowRef.current, {
+				scale: 1.15,
+				opacity: 0.7,
+				duration: 3.5,
+				repeat: -1,
+				yoyo: true,
+				ease: "sine.inOut",
+			});
+
+			// Scroll-line grows
+			gsap.fromTo(
+				lineRef.current,
+				{ scaleY: 0, transformOrigin: "top center" },
 				{
-					opacity: 1,
-					y: 0,
-					duration: 0.8,
-					ease: "power3.out",
+					scaleY: 1,
+					duration: 1.2,
+					ease: "power2.out",
+					delay: 1.4,
 				},
-				"-=0.5",
 			);
-
-			// Floating orbs animation
-			gsap.to(orb1Ref.current, {
-				y: -30,
-				x: 20,
-				duration: 6,
-				repeat: -1,
-				yoyo: true,
-				ease: "sine.inOut",
-			});
-
-			gsap.to(orb2Ref.current, {
-				y: 40,
-				x: -30,
-				duration: 8,
-				repeat: -1,
-				yoyo: true,
-				ease: "sine.inOut",
-			});
-
-			gsap.to(orb3Ref.current, {
-				y: -20,
-				x: -20,
-				duration: 7,
-				repeat: -1,
-				yoyo: true,
-				ease: "sine.inOut",
-			});
 		}, sectionRef);
 
 		return () => ctx.revert();
 	}, []);
 
-	// Mouse parallax effect for orbs
-	useEffect(() => {
-		const handleMouseMove = (e: MouseEvent) => {
-			const { clientX, clientY } = e;
-			const centerX = window.innerWidth / 2;
-			const centerY = window.innerHeight / 2;
-
-			const moveX = (clientX - centerX) / 50;
-			const moveY = (clientY - centerY) / 50;
-
-			gsap.to(orb1Ref.current, {
-				x: moveX * 2,
-				y: moveY * 2,
-				duration: 1,
-				ease: "power2.out",
-			});
-
-			gsap.to(orb2Ref.current, {
-				x: moveX * -1.5,
-				y: moveY * -1.5,
-				duration: 1,
-				ease: "power2.out",
-			});
-
-			gsap.to(orb3Ref.current, {
-				x: moveX * 1,
-				y: moveY * 1,
-				duration: 1,
-				ease: "power2.out",
-			});
-		};
-
-		window.addEventListener("mousemove", handleMouseMove);
-		return () => window.removeEventListener("mousemove", handleMouseMove);
-	}, []);
-
-	const titleWords = ["Precision", "Engineered", "Grow", "Accessories"];
-
 	return (
 		<section
 			ref={sectionRef}
-			className="relative min-h-screen flex items-center justify-center overflow-hidden"
+			className="relative min-h-screen flex items-center overflow-hidden"
 		>
-			{/* Background gradient orbs */}
-			<div
-				ref={orb1Ref}
-				className="absolute top-1/4 left-1/4 w-125 h-125 rounded-full bg-[#22c55e]/10 blur-[120px] pointer-events-none"
-			/>
-			<div
-				ref={orb2Ref}
-				className="absolute bottom-1/4 right-1/4 w-150 h-150 rounded-full bg-[#22c55e]/5 blur-[150px] pointer-events-none"
-			/>
-			<div
-				ref={orb3Ref}
-				className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-100 h-100 rounded-full bg-[#16a34a]/10 blur-[100px] pointer-events-none"
-			/>
+			{/* ── Background ─────────────────────────────────── */}
+			<div className="absolute inset-0 bg-[#050505]" />
 
-			{/* Grid pattern overlay */}
+			{/* Subtle grid */}
 			<div
-				className="absolute inset-0 opacity-[0.03]"
+				className="absolute inset-0 opacity-[0.025]"
 				style={{
-					backgroundImage: `linear-gradient(rgba(34, 197, 94, 0.3) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(34, 197, 94, 0.3) 1px, transparent 1px)`,
-					backgroundSize: "60px 60px",
+					backgroundImage: `
+						linear-gradient(rgba(34,197,94,0.5) 1px, transparent 1px),
+						linear-gradient(90deg, rgba(34,197,94,0.5) 1px, transparent 1px)
+					`,
+					backgroundSize: "64px 64px",
 				}}
 			/>
 
-			{/* Content */}
-			<div className="relative z-10 max-w-5xl mx-auto px-6 text-center pt-20">
-				{/* Eyebrow */}
-				<div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#22c55e]/20 bg-[#22c55e]/5 mb-8 animate-fade-in">
-					<span className="w-2 h-2 rounded-full bg-[#22c55e] animate-pulse" />
-					<span className="text-sm text-[#22c55e] font-medium">
-						Premium 3D Printed Products
-					</span>
-				</div>
+			{/* Ambient orbs */}
+			<div className="absolute top-1/4 -left-32 w-140 h-140 rounded-full bg-[#22c55e]/6 blur-[180px] pointer-events-none" />
+			<div className="absolute bottom-0 right-0 w-100 h-100 rounded-full bg-[#22c55e]/5 blur-[160px] pointer-events-none" />
 
-				{/* Title */}
-				<h1
-					ref={titleRef}
-					className="text-hero mb-8 text-[#fafafa] font-display"
-				>
-					{titleWords.map((word, index) => (
-						<span
-							key={index}
-							className="inline-block overflow-visible mr-[0.3em]"
-						>
-							<span className="word inline-block">
-								{word === "Grow" ? (
-									<span className="text-[#22c55e]">
-										{word}
-									</span>
-								) : (
-									word
-								)}
+			{/* ── Layout ─────────────────────────────────────── */}
+			<div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
+				<div className="grid lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_520px] gap-12 xl:gap-20 items-center min-h-screen py-32">
+					{/* Left: text */}
+					<div
+						ref={textRef}
+						className="flex flex-col items-start order-2 lg:order-1"
+					>
+						{/* Launch badge */}
+						<div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#22c55e]/25 bg-[#22c55e]/8 mb-10">
+							<span className="relative flex h-2 w-2">
+								<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-60" />
+								<span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]" />
 							</span>
-						</span>
-					))}
-				</h1>
+							<span className="text-xs font-bold text-[#22c55e] tracking-[0.22em] uppercase">
+								4/20 Drop · Now Live
+							</span>
+						</div>
 
-				{/* Subtitle */}
-				<p
-					ref={subtitleRef}
-					className="text-subheadline text-[#a3a3a3] max-w-2xl mx-auto mb-12 leading-relaxed"
-				>
-					Elevate your growing experience with meticulously designed,
-					high-quality 3D printed accessories built to last.
-				</p>
+						{/* Headline */}
+						<h1 className="font-display font-black leading-[0.88] tracking-tight mb-8">
+							<span className="block text-[clamp(3.5rem,6.5vw,7rem)] text-[#fafafa]">
+								THE
+							</span>
+							<span
+								className="block text-[clamp(3.5rem,6.5vw,7rem)] text-[#22c55e]"
+								style={{
+									textShadow:
+										"0 0 100px rgba(34,197,94,0.45), 0 0 30px rgba(34,197,94,0.25)",
+								}}
+							>
+								BANGER
+							</span>
+							<span className="block text-[clamp(3.5rem,6.5vw,7rem)] text-[#fafafa]">
+								BATH
+							</span>
+						</h1>
 
-				{/* Buttons */}
-				<div
-					ref={buttonsRef}
-					className="flex flex-col sm:flex-row gap-4 justify-center"
-				>
-					<MagneticButton strength={0.15}>
-						<Button asChild size="lg">
-							<Link href="/products">
-								Explore Products
-								<svg
-									className="w-5 h-5"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
+						{/* Tagline */}
+						<p className="text-[#737373] text-base font-medium italic tracking-wide mb-3">
+							&quot;Keep your nails fresh to death.&quot;
+						</p>
+
+						{/* Description */}
+						<p className="text-[#a3a3a3] text-base leading-relaxed max-w-120 mb-10">
+							Drop your piece into the bath — it seats just like
+							it would in a bong. Fill with isopropyl, close the
+							lid, and dial the knob to push it through. Clean
+							glass in seconds, no scrubbing required.
+						</p>
+
+						{/* Feature pills */}
+						<div className="flex flex-wrap gap-2 mb-12">
+							{[
+								"ISO Bath",
+								"Adjustable Knob",
+								"Joint Fit",
+								"Solvent-Tough PETG",
+							].map((tag) => (
+								<span
+									key={tag}
+									className="px-3.5 py-1.5 rounded-full bg-[#0f0f0f] border border-[#252525] text-sm text-[#737373] font-medium"
 								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M17 8l4 4m0 0l-4 4m4-4H3"
-									/>
-								</svg>
-							</Link>
-						</Button>
-					</MagneticButton>
+									{tag}
+								</span>
+							))}
+						</div>
 
-					<MagneticButton strength={0.15}>
-						<Button asChild variant="outline" size="lg">
-							<Link href="/contact">Get in Touch</Link>
-						</Button>
-					</MagneticButton>
+						{/* CTAs */}
+						<div className="flex flex-col sm:flex-row gap-4">
+							<MagneticButton strength={0.15}>
+								<Button asChild size="lg">
+									<Link href="/products">
+										Shop The Drop
+										<svg
+											className="w-5 h-5"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth={2}
+												d="M17 8l4 4m0 0l-4 4m4-4H3"
+											/>
+										</svg>
+									</Link>
+								</Button>
+							</MagneticButton>
+							<MagneticButton strength={0.15}>
+								<Button asChild variant="outline" size="lg">
+									<Link href="/contact">Get In Touch</Link>
+								</Button>
+							</MagneticButton>
+						</div>
+					</div>
+
+					{/* Right: product photo */}
+					<div
+						ref={imageRef}
+						className="relative order-1 lg:order-2 flex justify-center lg:justify-end"
+					>
+						{/* Glow halo */}
+						<div
+							ref={glowRef}
+							className="absolute inset-0 rounded-[2.5rem] bg-[#22c55e]/18 blur-[72px] pointer-events-none"
+						/>
+
+						{/* Image frame */}
+						<div className="relative w-full max-w-sm lg:max-w-none rounded-4xl overflow-hidden border border-[#22c55e]/12 shadow-[0_0_80px_rgba(34,197,94,0.12)]">
+							<Image
+								src="/bath1.JPG"
+								alt="Banger Bath — precision engineered dab accessory"
+								width={800}
+								height={1067}
+								className="w-full h-auto object-cover"
+								priority
+							/>
+							{/* Bottom gradient so image bleeds into page */}
+							<div className="absolute bottom-0 left-0 right-0 h-28 bg-linear-to-t from-[#050505] to-transparent" />
+						</div>
+
+						{/* Floating stat cards */}
+						<div className="absolute -left-4 top-1/4 hidden lg:flex flex-col gap-1 px-4 py-3 rounded-2xl bg-[#0f0f0f]/90 border border-[#1e1e1e] backdrop-blur-sm shadow-xl">
+							<span className="text-xs text-[#737373] font-medium uppercase tracking-wider">
+								Pressure
+							</span>
+							<span className="text-sm font-semibold text-[#fafafa]">
+								Adjustable Knob
+							</span>
+						</div>
+						<div className="absolute -right-4 bottom-1/3 hidden lg:flex flex-col gap-1 px-4 py-3 rounded-2xl bg-[#0f0f0f]/90 border border-[#1e1e1e] backdrop-blur-sm shadow-xl">
+							<span className="text-xs text-[#737373] font-medium uppercase tracking-wider">
+								Fit
+							</span>
+							<span className="text-sm font-semibold text-[#22c55e]">
+								Standard Joint
+							</span>
+						</div>
+					</div>
 				</div>
 			</div>
 
-			{/* Scroll indicator - positioned outside content div, hidden on mobile */}
-			<div className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-2 animate-fade-in stagger-5 z-20">
-				<span className="text-xs text-[#737373] uppercase tracking-widest">
+			{/* Scroll indicator */}
+			<div className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-2 z-20">
+				<span className="text-[10px] text-[#525252] uppercase tracking-[0.25em]">
 					Scroll
 				</span>
-				<div className="w-px h-12 bg-linear-to-b from-[#22c55e] to-transparent" />
+				<div
+					ref={lineRef}
+					className="w-px h-12 bg-linear-to-b from-[#22c55e] to-transparent"
+				/>
 			</div>
 
-			{/* Bottom gradient fade */}
-			<div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-[#050505] to-transparent pointer-events-none" />
+			{/* Bottom page fade */}
+			<div className="absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-[#050505] to-transparent pointer-events-none" />
 		</section>
 	);
 }

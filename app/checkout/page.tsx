@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
 	Elements,
 	PaymentElement,
@@ -73,6 +73,7 @@ interface SavedCheckoutSession {
 	shipping: ShippingForm;
 	shippingOptionId: string;
 	shippingOptionLabel: string;
+	checkoutSessionId: string;
 	paymentMethod: PaymentMethod;
 	clientSecret: string;
 	paymentIntentId: string;
@@ -188,6 +189,59 @@ function loadSavedCheckoutSession(): SavedCheckoutSession | null {
 	}
 }
 
+// ── Details cache (persists form fields across sessions; no payment credentials) ──
+
+const checkoutDetailsStorageKey = "threed4g-checkout-details";
+
+interface SavedCheckoutDetails {
+	customerName: string;
+	customerEmail: string;
+	shipping: ShippingForm;
+	shippingOptionId: string;
+	shippingOptionLabel: string;
+	availableShippingOptions: LiveShippingOption[];
+	/** Serialised address fields used to detect when options are stale. */
+	shippingAddressFingerprint: string;
+}
+
+/** Stable key built from every address field that affects shipping rates. */
+function getShippingAddressFingerprint(shipping: ShippingForm): string {
+	const country = resolveShippingCountry(shipping).trim().toUpperCase();
+	return [
+		country,
+		shipping.postalCode,
+		shipping.state,
+		shipping.city,
+		shipping.line1,
+	]
+		.map((v) => v.trim())
+		.join("|");
+}
+
+function persistCheckoutDetails(details: SavedCheckoutDetails | null) {
+	if (typeof window === "undefined") return;
+	if (!details) {
+		window.localStorage.removeItem(checkoutDetailsStorageKey);
+		return;
+	}
+	window.localStorage.setItem(
+		checkoutDetailsStorageKey,
+		JSON.stringify(details),
+	);
+}
+
+function loadSavedCheckoutDetails(): SavedCheckoutDetails | null {
+	if (typeof window === "undefined") return null;
+	const raw = window.localStorage.getItem(checkoutDetailsStorageKey);
+	if (!raw) return null;
+	try {
+		return JSON.parse(raw) as SavedCheckoutDetails;
+	} catch {
+		window.localStorage.removeItem(checkoutDetailsStorageKey);
+		return null;
+	}
+}
+
 function toPaymentMethod(value: unknown): PaymentMethod {
 	if (
 		value === "stripe" ||
@@ -218,6 +272,7 @@ function CheckoutPaymentForm({
 	customerEmail,
 	shipping,
 	shippingOptionId,
+	checkoutSessionId,
 	lineItems,
 	paymentIntentId,
 	onCancel,
@@ -227,6 +282,7 @@ function CheckoutPaymentForm({
 	customerEmail: string;
 	shipping: ShippingForm;
 	shippingOptionId: string;
+	checkoutSessionId: string;
 	lineItems: LineItem[];
 	paymentIntentId: string;
 	onCancel: () => Promise<void>;
@@ -285,6 +341,7 @@ function CheckoutPaymentForm({
 			body: JSON.stringify({
 				paymentMethod: "stripe",
 				paymentIntentId,
+				checkoutSessionId,
 				customer: {
 					name: customerName,
 					email: customerEmail,
@@ -368,16 +425,20 @@ function PayPalCheckoutForm({
 	customerEmail,
 	shipping,
 	shippingOptionId,
+	checkoutSessionId,
 	lineItems,
 	totalAmount,
+	onCancel,
 	onSuccess,
 }: {
 	customerName: string;
 	customerEmail: string;
 	shipping: ShippingForm;
 	shippingOptionId: string;
+	checkoutSessionId: string;
 	lineItems: LineItem[];
 	totalAmount: number;
+	onCancel: () => Promise<void>;
 	onSuccess: (order: OrderResponse["order"]) => void;
 }) {
 	const [error, setError] = useState<string | null>(null);
@@ -404,6 +465,7 @@ function PayPalCheckoutForm({
 	}
 
 	const buildOrderPayload = () => ({
+		checkoutSessionId,
 		customer: {
 			name: customerName,
 			email: customerEmail,
@@ -484,7 +546,10 @@ function PayPalCheckoutForm({
 					]}
 					createOrder={createOrder}
 					onApprove={handleApprove}
-					onCancel={() => setError("PayPal checkout was cancelled.")}
+					onCancel={async () => {
+						setError("PayPal checkout was cancelled.");
+						await onCancel();
+					}}
 					onError={(paypalError) => {
 						setError(
 							paypalError instanceof Error
@@ -511,6 +576,7 @@ export default function CheckoutPage() {
 	const [shipping, setShipping] = useState<ShippingForm>(defaultShipping());
 	const [shippingOptionId, setShippingOptionId] = useState("");
 	const [shippingOptionLabel, setShippingOptionLabel] = useState("Shipping");
+	const [checkoutSessionId, setCheckoutSessionId] = useState("");
 	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe");
 	const [countryOptions, setCountryOptions] = useState<CountryOption[]>(
 		fallbackCountryOptions,
@@ -544,41 +610,153 @@ export default function CheckoutPage() {
 		"details" | "shipping" | "payment"
 	>("details");
 
+	// Refs that mirror key state values so event handlers registered once
+	// (e.g. beforeunload) always read the current value without stale closures.
+	const checkoutSessionIdRef = useRef("");
+	const paymentIntentIdRef = useRef<string | null>(null);
+	const completedOrderRef = useRef<OrderResponse["order"] | null>(null);
+	// Tracks the address fingerprint that was used for the last shipping fetch.
+	const lastFetchedFingerprintRef = useRef("");
+
 	useEffect(() => {
 		setHasMounted(true);
 
 		const savedSession = loadSavedCheckoutSession();
-		if (!savedSession) {
+		if (savedSession) {
+			setCustomerName(savedSession.customerName);
+			setCustomerEmail(savedSession.customerEmail);
+			setShipping((current) => ({
+				...current,
+				...savedSession.shipping,
+				customCountry: String(savedSession.shipping.customCountry ?? ""),
+			}));
+			setShippingOptionId(String(savedSession.shippingOptionId ?? ""));
+			setShippingOptionLabel(
+				String(savedSession.shippingOptionLabel ?? "Shipping"),
+			);
+			setCheckoutSessionId(String(savedSession.checkoutSessionId ?? ""));
+			const restoredPaymentMethod = toPaymentMethod(
+				savedSession.paymentMethod,
+			);
+			setPaymentMethod(restoredPaymentMethod);
+			setClientSecret(savedSession.clientSecret);
+			setPaymentIntentId(savedSession.paymentIntentId);
+			setLineItems(savedSession.lineItems);
+			setSubtotal(savedSession.subtotal);
+			setShippingAmount(savedSession.shippingAmount);
+			setTotalAmount(savedSession.totalAmount);
+			setCurrency(normalizeCheckoutCurrency(savedSession.currency));
+			setCheckoutStep(
+				restoredPaymentMethod === "paypal" || savedSession.clientSecret
+					? "payment"
+					: "shipping",
+			);
 			return;
 		}
 
-		setCustomerName(savedSession.customerName);
-		setCustomerEmail(savedSession.customerEmail);
-		setShipping((current) => ({
-			...current,
-			...savedSession.shipping,
-			customCountry: String(savedSession.shipping.customCountry ?? ""),
-		}));
-		setShippingOptionId(String(savedSession.shippingOptionId ?? ""));
-		setShippingOptionLabel(
-			String(savedSession.shippingOptionLabel ?? "Shipping"),
-		);
-		const restoredPaymentMethod = toPaymentMethod(
-			savedSession.paymentMethod,
-		);
-		setPaymentMethod(restoredPaymentMethod);
-		setClientSecret(savedSession.clientSecret);
-		setPaymentIntentId(savedSession.paymentIntentId);
-		setLineItems(savedSession.lineItems);
-		setSubtotal(savedSession.subtotal);
-		setShippingAmount(savedSession.shippingAmount);
-		setTotalAmount(savedSession.totalAmount);
-		setCurrency(normalizeCheckoutCurrency(savedSession.currency));
-		setCheckoutStep(
-			restoredPaymentMethod === "paypal" || savedSession.clientSecret
-				? "payment"
-				: "shipping",
-		);
+		// No payment session – try the lightweight form-details cache.
+		const savedDetails = loadSavedCheckoutDetails();
+		if (!savedDetails) return;
+
+		const restoredShipping: ShippingForm = {
+			...defaultShipping(),
+			...savedDetails.shipping,
+			customCountry: String(savedDetails.shipping.customCountry ?? ""),
+		};
+		setCustomerName(savedDetails.customerName);
+		setCustomerEmail(savedDetails.customerEmail);
+		setShipping(restoredShipping);
+
+		const fingerprint = getShippingAddressFingerprint(restoredShipping);
+		if (
+			savedDetails.availableShippingOptions.length > 0 &&
+			savedDetails.shippingAddressFingerprint === fingerprint
+		) {
+			// Shipping options are still valid for this address – restore them.
+			setAvailableShippingOptions(savedDetails.availableShippingOptions);
+			setShippingOptionId(String(savedDetails.shippingOptionId ?? ""));
+			setShippingOptionLabel(
+				String(savedDetails.shippingOptionLabel ?? "Shipping"),
+			);
+			lastFetchedFingerprintRef.current = fingerprint;
+			setCheckoutStep("shipping");
+		}
+	}, []);
+
+	// Reserve stock as soon as the checkout page loads. This runs once after
+	// mount (when hasMounted flips to true). By that point the session-restore
+	// effect above has already run, so checkoutSessionId is populated if a
+	// prior session was saved.
+	const hasInitiatedReservationRef = useRef(false);
+	useEffect(() => {
+		if (!hasMounted) return;
+		if (hasInitiatedReservationRef.current) return;
+		hasInitiatedReservationRef.current = true;
+
+		if (items.length === 0 || checkoutSessionId) return;
+
+		void (async () => {
+			const response = await fetch("/api/checkout/session", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					items: items.map((item) => ({
+						id: item.id,
+						productId: item.productId,
+						variantId: item.variantId,
+						quantity: item.quantity,
+					})),
+				}),
+			});
+			const data = (await response.json()) as {
+				checkoutSessionId?: string;
+				error?: string;
+			};
+			if (!response.ok || !data.checkoutSessionId) {
+				setError(
+					data.error ??
+						"Could not reserve stock for checkout. Please refresh and try again.",
+				);
+				return;
+			}
+			setCheckoutSessionId(data.checkoutSessionId);
+		})();
+	}, [hasMounted, items, checkoutSessionId]);
+
+	// Keep refs current so the beforeunload handler always reads fresh values.
+	useEffect(() => { checkoutSessionIdRef.current = checkoutSessionId; }, [checkoutSessionId]);
+	useEffect(() => { paymentIntentIdRef.current = paymentIntentId; }, [paymentIntentId]);
+	useEffect(() => { completedOrderRef.current = completedOrder; }, [completedOrder]);
+
+	// Release the stock reservation and clear the payment session cache when the
+	// user navigates away or closes the tab. sendBeacon guarantees delivery even
+	// as the page unloads. The details cache is intentionally left intact so the
+	// form fields are pre-filled when the user returns.
+	useEffect(() => {
+		const handleBeforeUnload = () => {
+			const sessionId = checkoutSessionIdRef.current;
+			if (!sessionId || completedOrderRef.current) return;
+
+			const payload: Record<string, string> = {
+				checkoutSessionId: sessionId,
+			};
+			const piId = paymentIntentIdRef.current;
+			if (piId) payload.paymentIntentId = piId;
+
+			navigator.sendBeacon(
+				"/api/checkout/cancel",
+				new Blob([JSON.stringify(payload)], {
+					type: "application/json",
+				}),
+			);
+
+			// Clear the payment session so a stale checkoutSessionId is not
+			// restored on the next page load.
+			persistCheckoutSession(null);
+		};
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
 	}, []);
 
 	const hasItems = items.length > 0;
@@ -684,6 +862,61 @@ export default function CheckoutPage() {
 		persistCheckoutSession(null);
 	};
 
+	const releaseCheckoutSession = async (sessionId: string) => {
+		if (!sessionId) {
+			return;
+		}
+
+		await fetch("/api/checkout/session", {
+			method: "DELETE",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ checkoutSessionId: sessionId }),
+		}).catch(() => null);
+	};
+
+	const reserveCheckoutSession = async (): Promise<{
+		sessionId: string;
+		items: LineItem[];
+	} | null> => {
+		if (checkoutSessionId) {
+			await releaseCheckoutSession(checkoutSessionId);
+			setCheckoutSessionId("");
+		}
+
+		const reservationResponse = await fetch("/api/checkout/session", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				items: items.map((item) => ({
+					id: item.id,
+					productId: item.productId,
+					variantId: item.variantId,
+					quantity: item.quantity,
+				})),
+			}),
+		});
+
+		const reservationData = (await reservationResponse.json()) as {
+			checkoutSessionId?: string;
+			items?: LineItem[];
+			error?: string;
+		};
+
+		if (!reservationResponse.ok || !reservationData.checkoutSessionId) {
+			setError(
+				reservationData.error ??
+					"Unable to reserve stock for checkout. Please try again.",
+			);
+			return null;
+		}
+
+		setCheckoutSessionId(reservationData.checkoutSessionId);
+		return {
+			sessionId: reservationData.checkoutSessionId,
+			items: reservationData.items ?? [],
+		};
+	};
+
 	const loadLiveShippingOptions = async () => {
 		setLoadingShippingOptions(true);
 		setError(null);
@@ -720,6 +953,10 @@ export default function CheckoutPage() {
 				}
 				return options[0]?.id ?? "";
 			});
+			// Record the address that these options belong to so we can detect
+			// when a re-fetch is necessary.
+			lastFetchedFingerprintRef.current =
+				getShippingAddressFingerprint(shipping);
 			return true;
 		} catch {
 			setAvailableShippingOptions([]);
@@ -765,6 +1002,50 @@ export default function CheckoutPage() {
 		};
 	}, [addressLookupInput, resolvedShippingCountry]);
 
+	// Auto-save form details (debounced 500 ms). Excludes payment credentials.
+	useEffect(() => {
+		if (!hasMounted) return;
+		const timer = setTimeout(() => {
+			persistCheckoutDetails({
+				customerName,
+				customerEmail,
+				shipping,
+				shippingOptionId,
+				shippingOptionLabel,
+				availableShippingOptions,
+				shippingAddressFingerprint:
+					getShippingAddressFingerprint(shipping),
+			});
+		}, 500);
+		return () => clearTimeout(timer);
+	}, [
+		hasMounted,
+		customerName,
+		customerEmail,
+		shipping,
+		shippingOptionId,
+		shippingOptionLabel,
+		availableShippingOptions,
+	]);
+
+	// Auto-refresh shipping options when address changes while the shipping
+	// panel is visible. Debounced 700 ms so it doesn't fire on every keystroke.
+	useEffect(() => {
+		if (!hasMounted) return;
+		if (checkoutStep !== "shipping") return;
+		if (!shippingReady) return;
+
+		const fingerprint = getShippingAddressFingerprint(shipping);
+		if (fingerprint === lastFetchedFingerprintRef.current) return;
+
+		const timer = setTimeout(() => {
+			void loadLiveShippingOptions();
+		}, 700);
+		return () => clearTimeout(timer);
+		// loadLiveShippingOptions is stable per render; intentional omission.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [hasMounted, checkoutStep, shippingReady, shipping]);
+
 	const initializeCheckout = async () => {
 		if (!hasItems || !canInitializeCheckout || !selectedShippingOption) {
 			setError(
@@ -774,9 +1055,20 @@ export default function CheckoutPage() {
 		}
 
 		if (paymentMethod === "paypal") {
+			setLoadingIntent(true);
+			setError(null);
+
+			if (!checkoutSessionId) {
+				setError(
+					"Stock reservation is not ready yet. Please wait a moment and try again.",
+				);
+				setLoadingIntent(false);
+				return;
+			}
+
 			const preparedLineItems: LineItem[] = items.map((item) => ({
 				productId: item.productId,
-				variantId: item.variantId,
+				variantId: item.variantId ?? null,
 				productName: item.name,
 				variantName: item.variantName ?? item.name,
 				unitPrice: item.price,
@@ -803,6 +1095,7 @@ export default function CheckoutPage() {
 				shipping,
 				shippingOptionId: selectedShippingOption.id,
 				shippingOptionLabel: selectedShippingOption.label,
+				checkoutSessionId,
 				paymentMethod,
 				clientSecret: "",
 				paymentIntentId: "",
@@ -819,7 +1112,41 @@ export default function CheckoutPage() {
 		}
 
 		if (paymentMethod !== "stripe") {
+			setLoadingIntent(true);
+			setError(null);
+
+			if (!checkoutSessionId) {
+				setError(
+					"Stock reservation is not ready yet. Please wait a moment and try again.",
+				);
+				setLoadingIntent(false);
+				return;
+			}
+
+			persistCheckoutSession({
+				customerName,
+				customerEmail,
+				shipping,
+				shippingOptionId: selectedShippingOption.id,
+				shippingOptionLabel: selectedShippingOption.label,
+				checkoutSessionId,
+				paymentMethod,
+				clientSecret: "",
+				paymentIntentId: "",
+				lineItems,
+				subtotal: cartSubtotal,
+				shippingAmount: Number(
+					selectedShippingOption.amount.toFixed(2),
+				),
+				tariffAmount,
+				totalAmount:
+					cartSubtotal +
+					Number(selectedShippingOption.amount.toFixed(2)) +
+					tariffAmount,
+				currency,
+			});
 			await submitManualCheckout();
+			setLoadingIntent(false);
 			return;
 		}
 
@@ -835,6 +1162,13 @@ export default function CheckoutPage() {
 			return;
 		}
 
+		if (!checkoutSessionId) {
+			setError(
+				"Stock reservation is not ready yet. Please wait a moment and try again.",
+			);
+			return;
+		}
+
 		setLoadingIntent(true);
 		setError(null);
 
@@ -842,6 +1176,7 @@ export default function CheckoutPage() {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
+				checkoutSessionId,
 				customer: {
 					name: customerName,
 					email: customerEmail,
@@ -900,6 +1235,7 @@ export default function CheckoutPage() {
 			shippingOptionLabel: String(
 				data.shippingOption?.label ?? selectedShippingOption.label,
 			),
+			checkoutSessionId,
 			paymentMethod,
 			clientSecret: data.clientSecret,
 			paymentIntentId: data.paymentIntentId,
@@ -929,6 +1265,7 @@ export default function CheckoutPage() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					paymentMethod,
+					checkoutSessionId,
 					customer: {
 						name: customerName,
 						email: customerEmail,
@@ -970,6 +1307,8 @@ export default function CheckoutPage() {
 	const handleOrderSuccess = (order: OrderResponse["order"]) => {
 		clearCart();
 		persistCheckoutSession(null);
+		persistCheckoutDetails(null);
+		setCheckoutSessionId("");
 		setCompletedOrder(order);
 		setClientSecret(null);
 		setPaymentIntentId(null);
@@ -984,27 +1323,30 @@ export default function CheckoutPage() {
 	};
 
 	const handleCancelCheckout = async () => {
-		if (!paymentIntentId) {
-			return;
-		}
-
 		setCancelling(true);
 		setError(null);
 
-		const response = await fetch("/api/checkout/cancel", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ paymentIntentId }),
-		});
+		if (paymentIntentId) {
+			const response = await fetch("/api/checkout/cancel", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ paymentIntentId }),
+			});
 
-		if (!response.ok) {
-			const data = (await response.json()) as { error?: string };
-			setError(data.error ?? "Failed to cancel checkout.");
-			setCancelling(false);
-			return;
+			if (!response.ok) {
+				const data = (await response.json()) as { error?: string };
+				setError(data.error ?? "Failed to cancel checkout.");
+				setCancelling(false);
+				return;
+			}
+		}
+
+		if (checkoutSessionId) {
+			await releaseCheckoutSession(checkoutSessionId);
 		}
 
 		persistCheckoutSession(null);
+		setCheckoutSessionId("");
 		setClientSecret(null);
 		setPaymentIntentId(null);
 		setLineItems([]);
@@ -1385,6 +1727,22 @@ export default function CheckoutPage() {
 												);
 												return;
 											}
+											// Use cached options when the address
+											// hasn't changed since the last fetch.
+											const fingerprint =
+												getShippingAddressFingerprint(
+													shipping,
+												);
+											if (
+												availableShippingOptions.length >
+													0 &&
+												fingerprint ===
+													lastFetchedFingerprintRef.current
+											) {
+												setError(null);
+												setCheckoutStep("shipping");
+												return;
+											}
 											const loaded =
 												await loadLiveShippingOptions();
 											if (!loaded) {
@@ -1689,6 +2047,9 @@ export default function CheckoutPage() {
 													shippingOptionId={
 														shippingOptionId
 													}
+													checkoutSessionId={
+														checkoutSessionId
+													}
 													lineItems={lineItems}
 													paymentIntentId={
 														paymentIntentId
@@ -1767,8 +2128,12 @@ export default function CheckoutPage() {
 											customerEmail={customerEmail}
 											shipping={shipping}
 											shippingOptionId={shippingOptionId}
+											checkoutSessionId={
+												checkoutSessionId
+											}
 											lineItems={lineItems}
 											totalAmount={totalAmount}
+											onCancel={handleCancelCheckout}
 											onSuccess={handleOrderSuccess}
 										/>
 										{cancelling && (

@@ -1,27 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { releaseStockSession } from "@/lib/stockReservation";
 
 export async function POST(request: NextRequest) {
 	try {
 		const body = (await request.json()) as Record<string, unknown>;
 		const paymentIntentId = String(body.paymentIntentId ?? "").trim();
+		const checkoutSessionId = String(body.checkoutSessionId ?? "").trim();
 
-		if (!paymentIntentId) {
+		if (!paymentIntentId && !checkoutSessionId) {
 			return NextResponse.json(
-				{ error: "paymentIntentId is required" },
+				{
+					error: "paymentIntentId or checkoutSessionId is required",
+				},
 				{ status: 400 },
 			);
 		}
 
-		if (!process.env.STRIPE_SECRET_KEY) {
+		if (paymentIntentId && !process.env.STRIPE_SECRET_KEY) {
 			return NextResponse.json(
 				{ error: "Stripe is not configured" },
 				{ status: 500 },
 			);
 		}
 
-		const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-		await stripe.paymentIntents.cancel(paymentIntentId).catch(() => null);
+		if (paymentIntentId) {
+			const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+			await stripe.paymentIntents
+				.cancel(paymentIntentId)
+				.catch(() => null);
+		}
+
+		if (checkoutSessionId) {
+			await releaseStockSession(checkoutSessionId);
+		}
 
 		return NextResponse.json({ cancelled: true });
 	} catch (error) {

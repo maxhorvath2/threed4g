@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { FeaturedProductsSection } from "@/components/sections/FeaturedProductsSection";
 import { CTASection } from "@/components/sections/CTASection";
+import { ProductShowcaseSection } from "@/components/sections/ProductShowcaseSection";
 import { sql } from "@/lib/db";
 import type {
 	Product,
@@ -135,6 +136,9 @@ export default async function Home() {
 			<div className="h-10" aria-hidden="true" />
 			{/* Hero Section */}
 			<HeroSection />
+
+			{/* Product Showcase */}
+			<ProductShowcaseSection />
 
 			{/* Features Section */}
 			<FeaturesSection />
