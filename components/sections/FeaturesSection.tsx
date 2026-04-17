@@ -41,7 +41,7 @@ const features = [
 				/>
 			</svg>
 		),
-		title: "Fits Like a rig",
+		title: "Fits Like a Rig",
 		description:
 			"Your piece drops into the bath the same way it fits into a rig — that joint connection you already know. No adapters, no fiddling, no improvising.",
 	},
