@@ -60,16 +60,17 @@ export function CTASection() {
 
 					{/* Description */}
 					<p className="text-lg text-[#a3a3a3] mb-10 max-w-2xl mx-auto leading-relaxed">
-						Limited first-run stock. Once it&apos;s out, it&apos;s out.
-						Keep your banger clean, your hits pure, and your setup
-						looking fresh — or hit us up if you need something made to order.
+						Limited first-run stock. Once it&apos;s out, it&apos;s
+						out. Keep your banger clean, your hits pure, and your
+						setup looking fresh — or hit us up if you need something
+						made to order.
 					</p>
 
 					{/* CTA Buttons */}
 					<div className="flex flex-col sm:flex-row gap-4 justify-center">
 						<MagneticButton strength={0.15}>
 							<Button asChild size="lg">
-								<Link href="/products">
+								<Link href="/product/11">
 									Shop The Drop
 									<svg
 										className="w-5 h-5"

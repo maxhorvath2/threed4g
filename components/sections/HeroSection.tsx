@@ -169,7 +169,7 @@ export function HeroSection() {
 						<div className="flex flex-col sm:flex-row gap-4">
 							<MagneticButton strength={0.15}>
 								<Button asChild size="lg">
-									<Link href="/products">
+									<Link href="/product/11">
 										Shop The Drop
 										<svg
 											className="w-5 h-5"

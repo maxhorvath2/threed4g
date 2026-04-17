@@ -7,7 +7,12 @@ import { Card } from "@/components/ui/Card";
 const features = [
 	{
 		icon: (
-			<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<svg
+				className="w-8 h-8"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
 				<path
 					strokeLinecap="round"
 					strokeLinejoin="round"
@@ -22,7 +27,12 @@ const features = [
 	},
 	{
 		icon: (
-			<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<svg
+				className="w-8 h-8"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
 				<path
 					strokeLinecap="round"
 					strokeLinejoin="round"
@@ -31,13 +41,18 @@ const features = [
 				/>
 			</svg>
 		),
-		title: "Fits Like a Bong",
+		title: "Fits Like a rig",
 		description:
-			"Your piece drops into the bath the same way it fits into a bong — that joint connection you already know. No adapters, no fiddling, no improvising.",
+			"Your piece drops into the bath the same way it fits into a rig — that joint connection you already know. No adapters, no fiddling, no improvising.",
 	},
 	{
 		icon: (
-			<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<svg
+				className="w-8 h-8"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
 				<path
 					strokeLinecap="round"
 					strokeLinejoin="round"
@@ -72,7 +87,7 @@ export function FeaturesSection() {
 						start: "top 90%",
 						once: true,
 					},
-				}
+				},
 			);
 
 			// Animate cards with stagger
@@ -92,7 +107,7 @@ export function FeaturesSection() {
 							start: "top 90%",
 							once: true,
 						},
-					}
+					},
 				);
 			}
 		}, sectionRef);
@@ -108,20 +123,31 @@ export function FeaturesSection() {
 			<div className="max-w-7xl mx-auto px-6">
 				{/* Section Header */}
 				<div className="features-heading text-center max-w-3xl mx-auto mb-20">
-					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">Why It Slaps</span>
+					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">
+						Why It Slaps
+					</span>
 					<h2 className="text-headline text-[#fafafa] mb-6">
-						Every Detail <span className="text-[#22c55e]">Matters</span>
+						Every Detail{" "}
+						<span className="text-[#22c55e]">Matters</span>
 					</h2>
 					<p className="text-lg text-[#a3a3a3] leading-relaxed">
-						Drop your piece in, fill with ISO, close the lid, and dial the knob.
-						That&apos;s the whole process — no soaking overnight, no scrubbing residue off your banger.
+						Drop your piece in, fill with ISO, close the lid, and
+						dial the knob. That&apos;s the whole process — no
+						soaking overnight, no scrubbing residue off your banger.
 					</p>
 				</div>
 
 				{/* Feature Cards */}
-				<div ref={cardsRef} className="grid md:grid-cols-3 gap-6 lg:gap-8">
+				<div
+					ref={cardsRef}
+					className="grid md:grid-cols-3 gap-6 lg:gap-8"
+				>
 					{features.map((feature, index) => (
-						<Card key={index} variant="interactive" className="p-8 group">
+						<Card
+							key={index}
+							variant="interactive"
+							className="p-8 group"
+						>
 							{/* Icon */}
 							<div className="w-14 h-14 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center text-[#22c55e] mb-6 group-hover:bg-[#22c55e]/20 group-hover:scale-110 transition-all duration-300">
 								{feature.icon}
@@ -131,7 +157,9 @@ export function FeaturesSection() {
 							<h3 className="text-xl font-semibold text-[#fafafa] mb-3 group-hover:text-[#22c55e] transition-colors duration-300">
 								{feature.title}
 							</h3>
-							<p className="text-[#a3a3a3] leading-relaxed">{feature.description}</p>
+							<p className="text-[#a3a3a3] leading-relaxed">
+								{feature.description}
+							</p>
 
 							{/* Decorative line */}
 							<div className="absolute bottom-0 left-8 right-8 h-px bg-linear-to-r from-transparent via-[#22c55e]/0 to-transparent group-hover:via-[#22c55e]/50 transition-all duration-500" />
