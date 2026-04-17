@@ -143,7 +143,7 @@ export function HeroSection() {
 						{/* Description */}
 						<p className="text-[#a3a3a3] text-base leading-relaxed max-w-120 mb-10">
 							Drop your piece into the bath — it seats just like
-							it would in a bong. Fill with isopropyl, close the
+							it would in a rig. Fill with isopropyl, close the
 							lid, and dial the knob to push it through. Clean
 							glass in seconds, no scrubbing required.
 						</p>
