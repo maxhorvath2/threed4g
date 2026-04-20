@@ -128,7 +128,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
 				<div className="grid lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 overflow-hidden">
 					{/* Image Section */}
-					<FadeIn delay={0.1} duration={0.8} direction="up" className="min-w-0">
+					<FadeIn
+						delay={0.1}
+						duration={0.8}
+						direction="up"
+						className="min-w-0"
+					>
 						<div className="space-y-4">
 							{/* Main Image */}
 							<div
@@ -231,7 +236,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
 					<div className="flex flex-col min-w-0">
 						{/* Category badge */}
 						{product.category && (
-							<FadeIn delay={0.15} duration={0.6} className="min-w-0">
+							<FadeIn
+								delay={0.15}
+								duration={0.6}
+								className="min-w-0"
+							>
 								<Badge variant="default" className="w-fit mb-4">
 									{product.category}
 								</Badge>
@@ -262,7 +271,11 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
 						{/* Variant Selector */}
 						{hasMultipleVariants && (
-							<FadeIn delay={0.28} duration={0.6} className="min-w-0">
+							<FadeIn
+								delay={0.28}
+								duration={0.6}
+								className="min-w-0"
+							>
 								<div className="mb-6 sm:mb-8">
 									<h2 className="text-sm font-semibold text-[#a3a3a3] uppercase tracking-wider mb-3">
 										Select Option
@@ -305,23 +318,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
 							</FadeIn>
 						)}
 
-						{/* Description */}
-						{product.description && (
-							<FadeIn delay={0.3} duration={0.6} className="min-w-0">
-								<div className="mb-6 sm:mb-8">
-									<h2 className="text-sm font-semibold text-[#a3a3a3] uppercase tracking-wider mb-3">
-										Description
-									</h2>
-									<p className="text-[#a3a3a3] leading-relaxed text-base sm:text-lg whitespace-pre-wrap">
-										{product.description}
-									</p>
-								</div>
-							</FadeIn>
-						)}
-
 						{/* Add to Cart Button */}
-						<FadeIn delay={0.4} duration={0.6} className="min-w-0">
-							<div className="mt-6 lg:mt-auto pt-6 border-t border-[#171717]">
+						<FadeIn delay={0.3} duration={0.6} className="min-w-0">
+							<div className="pb-6 sm:pb-8 border-b border-[#171717]">
 								<AddToCartButton
 									product={{
 										id: product.id,
@@ -372,6 +371,24 @@ export function ProductDetail({ product }: ProductDetailProps) {
 								)}
 							</div>
 						</FadeIn>
+
+						{/* Description */}
+						{product.description && (
+							<FadeIn
+								delay={0.4}
+								duration={0.6}
+								className="min-w-0"
+							>
+								<div className="pt-6 sm:pt-8">
+									<h2 className="text-sm font-semibold text-[#a3a3a3] uppercase tracking-wider mb-3">
+										Description
+									</h2>
+									<p className="text-[#a3a3a3] leading-relaxed text-base sm:text-lg whitespace-pre-wrap">
+										{product.description}
+									</p>
+								</div>
+							</FadeIn>
+						)}
 					</div>
 				</div>
 			</div>
