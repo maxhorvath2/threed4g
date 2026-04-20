@@ -68,17 +68,17 @@ export default function LinksPage() {
 			{/* Background elements */}
 			<div className="absolute top-0 right-0 w-125 h-125 rounded-full bg-[#22c55e]/5 blur-[150px] pointer-events-none" />
 
-			<main className="relative pt-32 pb-20 min-h-[calc(100vh-200px)]">
-				<div className="max-w-2xl mx-auto px-6">
+			<main className="relative pt-24 sm:pt-32 pb-16 sm:pb-20 min-h-[calc(100vh-200px)]">
+				<div className="max-w-2xl mx-auto px-4 sm:px-6">
 					{/* Header */}
-					<div className="text-center mb-16">
+					<div className="text-center mb-10 sm:mb-16">
 						<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">
 							Partner Sites
 						</span>
-						<h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold text-[#fafafa] mb-6">
+						<h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold text-[#fafafa] mb-6">
 							Our <span className="text-[#22c55e]">Links</span>
 						</h1>
-						<p className="text-lg text-[#a3a3a3] max-w-xl mx-auto">
+						<p className="text-base sm:text-lg text-[#a3a3a3] max-w-xl mx-auto">
 							Check out our partner sites and exclusive offers with special promo codes.
 						</p>
 					</div>

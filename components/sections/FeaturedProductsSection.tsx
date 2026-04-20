@@ -64,14 +64,14 @@ export function FeaturedProductsSection({
 	}, [products]);
 
 	return (
-		<section ref={sectionRef} className="relative py-32 overflow-hidden">
+		<section ref={sectionRef} className="relative py-20 md:py-32 overflow-hidden">
 			{/* Background elements */}
 			<div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#171717] to-transparent" />
 			<div className="absolute top-1/2 right-0 w-100 h-100 rounded-full bg-[#22c55e]/5 blur-[150px] pointer-events-none" />
 
-			<div className="max-w-7xl mx-auto px-6">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6">
 				{/* Section Header */}
-				<div className="products-heading flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-16">
+				<div className="products-heading flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6 mb-10 md:mb-16">
 					<div>
 						<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">
 							Our Products
@@ -91,7 +91,7 @@ export function FeaturedProductsSection({
 				{products.length > 0 ? (
 					<div
 						ref={gridRef}
-						className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+						className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8"
 					>
 						{products.slice(0, 6).map((product) => (
 							<ProductCard
@@ -113,7 +113,7 @@ export function FeaturedProductsSection({
 				)}
 
 				{/* View All Button */}
-				<div className="text-center mt-16">
+				<div className="text-center mt-10 md:mt-16">
 					<MagneticButton strength={0.15}>
 						<Button asChild variant="outline" size="lg">
 							<Link href="/products">

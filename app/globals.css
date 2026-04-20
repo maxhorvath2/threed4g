@@ -69,6 +69,10 @@ html {
 	scroll-behavior: auto; /* Let Lenis handle smooth scroll */
 }
 
+html {
+	overflow-x: hidden;
+}
+
 body {
 	background: var(--background);
 	color: var(--foreground);

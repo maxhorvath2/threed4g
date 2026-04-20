@@ -72,11 +72,11 @@ export function ProductsContent({ products }: ProductsContentProps) {
 	}, [activeCategory]);
 
 	return (
-		<section ref={sectionRef} className="pt-32 pb-20">
+		<section ref={sectionRef} className="pt-24 sm:pt-32 pb-16 sm:pb-20">
 			{/* Background elements */}
 			<div className="absolute top-0 right-0 w-125 h-125 rounded-full bg-[#22c55e]/5 blur-[150px] pointer-events-none" />
 
-			<div className="max-w-7xl mx-auto px-6">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6">
 				{/* Header */}
 				<div className="gallery-header text-center mb-8 gap-2 flex flex-col items-center">
 					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">
@@ -85,7 +85,7 @@ export function ProductsContent({ products }: ProductsContentProps) {
 					<h1 className="text-headline text-[#fafafa] mb-6">
 						Product <span className="text-[#22c55e]">Gallery</span>
 					</h1>
-					<p className="text-lg text-[#a3a3a3] max-w-2xl mx-auto">
+					<p className="text-base sm:text-lg text-[#a3a3a3] max-w-2xl mx-auto">
 						Browse our complete collection of precision-engineered
 						3D printed accessories for your grow tent setup. For any
 						custom requests or inquiries, please don&apos;t hesitate
@@ -93,7 +93,7 @@ export function ProductsContent({ products }: ProductsContentProps) {
 						Instagram!
 					</p>
 
-					<p className="text-sm text-[#737373] mt-4 w-2xl">
+					<p className="text-sm text-[#737373] mt-4 max-w-2xl">
 						Please note that this store is still under construction,
 						and if you run into any issues or are interested in an
 						unavailable product, please feel free to contact us
@@ -103,7 +103,7 @@ export function ProductsContent({ products }: ProductsContentProps) {
 
 				{/* Category Filter */}
 				{categories.length > 0 && (
-					<div className="flex flex-wrap justify-center gap-2 mb-12">
+					<div className="flex flex-wrap justify-center gap-2 mb-10 sm:mb-12">
 						<button
 							onClick={() => setActiveCategory(null)}
 							className={`filter-pill px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
@@ -158,7 +158,7 @@ export function ProductsContent({ products }: ProductsContentProps) {
 				) : (
 					<div
 						ref={gridRef}
-						className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+						className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
 					>
 						{filteredProducts.map((product) => (
 							<ProductCard key={product.id} product={product} />

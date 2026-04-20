@@ -37,7 +37,7 @@ export default function Navigation() {
 					: "bg-transparent border-b border-transparent"
 			}`}
 		>
-			<div className="max-w-7xl mx-auto px-6 lg:px-8">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="relative flex justify-between items-center h-20">
 					{/* Logo */}
 					<MagneticButton strength={0.15}>

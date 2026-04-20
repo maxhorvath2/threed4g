@@ -40,7 +40,7 @@ export function Footer() {
 			{/* Gradient line */}
 			<div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#22c55e]/20 to-transparent" />
 
-			<div className="max-w-7xl mx-auto px-6 py-16">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
 				<div className="grid md:grid-cols-3 gap-12 md:gap-8">
 					{/* Brand */}
 					<div className="md:col-span-1">

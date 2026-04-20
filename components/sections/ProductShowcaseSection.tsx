@@ -57,7 +57,7 @@ export function ProductShowcaseSection() {
 			{/* Top border */}
 			<div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1a1a1a] to-transparent" />
 
-			<div className="max-w-7xl mx-auto px-6">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6">
 				{/* Section header */}
 				<div className="showcase-heading flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-14">
 					<div>
@@ -86,22 +86,19 @@ export function ProductShowcaseSection() {
 				</div>
 
 				{/* Asymmetric photo grid */}
-				<div className="showcase-grid grid grid-cols-2 lg:grid-cols-12 grid-rows-[auto] gap-3 lg:gap-4">
-					{/* bath3 — tall left anchor (spans 2 rows, 5 cols on desktop) */}
+				<div className="showcase-grid grid grid-cols-2 lg:grid-cols-12 gap-3 lg:gap-4">
+					{/* bath3 — full width on mobile, tall left anchor on desktop */}
 					<div
-						className="showcase-tile col-span-1 lg:col-span-5 row-span-2 relative rounded-2xl overflow-hidden border border-[#1a1a1a] group"
-						style={{ aspectRatio: "3/4" }}
+						className="showcase-tile col-span-2 lg:col-span-5 lg:row-span-2 relative rounded-2xl overflow-hidden border border-[#1a1a1a] group aspect-[4/3] lg:aspect-[3/4]"
 					>
 						<Image
 							src="/bath3.JPG"
 							alt="Banger Bath — front profile"
 							fill
-							sizes="(min-width: 1024px) 41vw, 50vw"
+							sizes="(min-width: 1024px) 41vw, 100vw"
 							className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
 						/>
-						{/* bottom fade */}
 						<div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#050505]/80 to-transparent" />
-						{/* label */}
 						<div className="absolute bottom-5 left-5 flex flex-col gap-0.5">
 							<span className="text-[10px] text-[#525252] uppercase tracking-[0.2em] font-medium">
 								Profile View
@@ -112,10 +109,10 @@ export function ProductShowcaseSection() {
 						</div>
 					</div>
 
-					{/* bath1 + bath2 — shared row, fixed height so both flush */}
-					<div className="showcase-tile col-span-1 lg:col-span-7 flex gap-3 lg:gap-4 h-52 lg:h-64">
+					{/* bath1 + bath2 — 2-col row on mobile, right-side panel on desktop */}
+					<div className="showcase-tile col-span-2 lg:col-span-7 flex gap-3 lg:gap-4 aspect-[2/1] lg:aspect-auto lg:h-64">
 						{/* bath1 — top view */}
-						<div className="relative flex-[4] rounded-2xl overflow-hidden border border-[#1a1a1a] group">
+						<div className="relative flex-1 rounded-2xl overflow-hidden border border-[#1a1a1a] group">
 							<Image
 								src="/bath1.JPG"
 								alt="Banger Bath — top angle"
@@ -132,7 +129,7 @@ export function ProductShowcaseSection() {
 						</div>
 
 						{/* bath2 — detail */}
-						<div className="relative flex-[3] rounded-2xl overflow-hidden border border-[#22c55e]/15 shadow-[0_0_40px_rgba(34,197,94,0.08)] group">
+						<div className="relative flex-1 rounded-2xl overflow-hidden border border-[#22c55e]/15 shadow-[0_0_40px_rgba(34,197,94,0.08)] group">
 							<Image
 								src="/bath2.JPG"
 								alt="Banger Bath — detail shot"
@@ -149,10 +146,9 @@ export function ProductShowcaseSection() {
 						</div>
 					</div>
 
-					{/* bath4 — bottom right, spans 7 cols */}
+					{/* bath4 — full width wide shot */}
 					<div
-						className="showcase-tile col-span-2 lg:col-span-7 relative rounded-2xl overflow-hidden border border-[#1a1a1a] group"
-						style={{ aspectRatio: "16/9" }}
+						className="showcase-tile col-span-2 lg:col-span-7 relative rounded-2xl overflow-hidden border border-[#1a1a1a] group aspect-[16/9]"
 					>
 						<Image
 							src="/bath4.JPG"
@@ -162,7 +158,6 @@ export function ProductShowcaseSection() {
 							className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
 						/>
 						<div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#050505]/80 to-transparent" />
-						{/* floating spec */}
 						<div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
 							<div className="flex flex-col gap-0.5">
 								<span className="text-[10px] text-[#525252] uppercase tracking-[0.2em] font-medium">
@@ -172,9 +167,7 @@ export function ProductShowcaseSection() {
 									Joint-Fit ISO Bath
 								</span>
 							</div>
-							<span
-								className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0f0f0f]/80 border border-[#22c55e]/20 text-xs font-medium text-[#22c55e] backdrop-blur-sm"
-							>
+							<span className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0f0f0f]/80 border border-[#22c55e]/20 text-xs font-medium text-[#22c55e] backdrop-blur-sm">
 								<span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] inline-block" />
 								In Stock
 							</span>

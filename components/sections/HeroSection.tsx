@@ -76,7 +76,7 @@ export function HeroSection() {
 	return (
 		<section
 			ref={sectionRef}
-			className="relative min-h-screen flex items-center overflow-hidden"
+			className="relative min-h-screen flex items-center overflow-x-hidden"
 		>
 			{/* ── Background ─────────────────────────────────── */}
 			<div className="absolute inset-0 bg-[#050505]" />
@@ -98,8 +98,8 @@ export function HeroSection() {
 			<div className="absolute bottom-0 right-0 w-100 h-100 rounded-full bg-[#22c55e]/5 blur-[160px] pointer-events-none" />
 
 			{/* ── Layout ─────────────────────────────────────── */}
-			<div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
-				<div className="grid lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_520px] gap-12 xl:gap-20 items-center min-h-screen py-32">
+			<div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full">
+				<div className="grid lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_520px] gap-8 lg:gap-12 xl:gap-20 items-center min-h-screen py-24 sm:py-32">
 					{/* Left: text */}
 					<div
 						ref={textRef}
@@ -149,7 +149,7 @@ export function HeroSection() {
 						</p>
 
 						{/* Feature pills */}
-						<div className="flex flex-wrap gap-2 mb-12">
+						<div className="flex flex-wrap gap-2 mb-8 md:mb-12">
 							{[
 								"ISO Bath",
 								"Adjustable Knob",

@@ -29,7 +29,7 @@ export function CTASection() {
 	}, []);
 
 	return (
-		<section ref={sectionRef} className="relative py-32 overflow-hidden">
+		<section ref={sectionRef} className="relative py-20 md:py-32 overflow-hidden">
 			{/* Background */}
 			<div className="absolute inset-0 bg-linear-to-b from-transparent via-[#22c55e]/5 to-transparent" />
 			<div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#22c55e]/30 to-transparent" />
@@ -39,7 +39,7 @@ export function CTASection() {
 			<div className="absolute top-1/4 left-1/4 w-75 h-75 rounded-full bg-[#22c55e]/10 blur-[100px] pointer-events-none animate-float-slow" />
 			<div className="absolute bottom-1/4 right-1/4 w-62.5 h-62.5 rounded-full bg-[#22c55e]/10 blur-[80px] pointer-events-none animate-float-delayed" />
 
-			<div className="relative max-w-4xl mx-auto px-6 text-center">
+			<div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
 				<div ref={contentRef}>
 					{/* Badge */}
 					<div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#22c55e]/30 bg-[#22c55e]/8 mb-8">

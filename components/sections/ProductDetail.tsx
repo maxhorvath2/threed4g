@@ -98,7 +98,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 			: totalAvailableStock;
 
 	return (
-		<section className="pt-32 pb-20 px-6">
+		<section className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 overflow-x-hidden">
 			<div className="max-w-7xl mx-auto">
 				{/* Back button */}
 				<FadeIn delay={0} duration={0.6}>
@@ -106,7 +106,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 						<Button
 							variant="ghost"
 							size="sm"
-							className="mb-8 gap-2"
+							className="mb-5 sm:mb-8 gap-2"
 						>
 							<svg
 								className="w-4 h-4"
@@ -126,9 +126,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
 					</Link>
 				</FadeIn>
 
-				<div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+				<div className="grid lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 overflow-hidden">
 					{/* Image Section */}
-					<FadeIn delay={0.1} duration={0.8} direction="left">
+					<FadeIn delay={0.1} duration={0.8} direction="up" className="min-w-0">
 						<div className="space-y-4">
 							{/* Main Image */}
 							<div
@@ -204,7 +204,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 											onClick={() =>
 												setSelectedImageIndex(index)
 											}
-											className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${
+											className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${
 												selectedImageIndex === index
 													? "border-[#22c55e]"
 													: "border-[#262626] hover:border-[#404040]"
@@ -228,10 +228,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
 					</FadeIn>
 
 					{/* Product Info Section */}
-					<div className="flex flex-col">
+					<div className="flex flex-col min-w-0">
 						{/* Category badge */}
 						{product.category && (
-							<FadeIn delay={0.15} duration={0.6}>
+							<FadeIn delay={0.15} duration={0.6} className="min-w-0">
 								<Badge variant="default" className="w-fit mb-4">
 									{product.category}
 								</Badge>
@@ -239,17 +239,17 @@ export function ProductDetail({ product }: ProductDetailProps) {
 						)}
 
 						{/* Title */}
-						<FadeIn delay={0.2} duration={0.6}>
-							<h1 className="text-headline font-bold text-[#fafafa] mb-4">
+						<FadeIn delay={0.2} duration={0.6} className="min-w-0">
+							<h1 className="text-headline font-bold text-[#fafafa] mb-3 sm:mb-4">
 								{product.name}
 							</h1>
 						</FadeIn>
 
 						{/* Price */}
-						<FadeIn delay={0.25} duration={0.6}>
+						<FadeIn delay={0.25} duration={0.6} className="min-w-0">
 							<div className="mb-6">
 								{hasPrice ? (
-									<span className="text-3xl font-bold text-[#22c55e]">
+									<span className="text-2xl sm:text-3xl font-bold text-[#22c55e]">
 										${displayPrice}
 									</span>
 								) : (
@@ -262,19 +262,19 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
 						{/* Variant Selector */}
 						{hasMultipleVariants && (
-							<FadeIn delay={0.28} duration={0.6}>
-								<div className="mb-8">
+							<FadeIn delay={0.28} duration={0.6} className="min-w-0">
+								<div className="mb-6 sm:mb-8">
 									<h2 className="text-sm font-semibold text-[#a3a3a3] uppercase tracking-wider mb-3">
 										Select Option
 									</h2>
-									<div className="flex flex-wrap gap-3">
+									<div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
 										{product.variants.map((variant) => (
 											<button
 												key={variant.id}
 												onClick={() =>
 													setSelectedVariant(variant)
 												}
-												className={`px-4 py-3 rounded-lg border transition-all ${
+												className={`w-full sm:w-auto text-left px-4 py-3 rounded-lg border transition-all ${
 													selectedVariant?.id ===
 													variant.id
 														? "border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]"
@@ -307,12 +307,12 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
 						{/* Description */}
 						{product.description && (
-							<FadeIn delay={0.3} duration={0.6}>
-								<div className="mb-8">
+							<FadeIn delay={0.3} duration={0.6} className="min-w-0">
+								<div className="mb-6 sm:mb-8">
 									<h2 className="text-sm font-semibold text-[#a3a3a3] uppercase tracking-wider mb-3">
 										Description
 									</h2>
-									<p className="text-[#a3a3a3] leading-relaxed text-lg">
+									<p className="text-[#a3a3a3] leading-relaxed text-base sm:text-lg">
 										{product.description}
 									</p>
 								</div>
@@ -320,8 +320,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
 						)}
 
 						{/* Add to Cart Button */}
-						<FadeIn delay={0.4} duration={0.6}>
-							<div className="mt-auto pt-6 border-t border-[#171717]">
+						<FadeIn delay={0.4} duration={0.6} className="min-w-0">
+							<div className="mt-6 lg:mt-auto pt-6 border-t border-[#171717]">
 								<AddToCartButton
 									product={{
 										id: product.id,
@@ -359,7 +359,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 									}
 									stockQuantity={activeStockQuantity}
 									size="lg"
-									className="w-full sm:w-auto"
+									className="w-full"
 									showPrice={true}
 									disabled={
 										hasMultipleVariants && !selectedVariant

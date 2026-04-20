@@ -116,13 +116,13 @@ export function FeaturesSection() {
 	}, []);
 
 	return (
-		<section ref={sectionRef} className="relative py-32 overflow-hidden">
+		<section ref={sectionRef} className="relative py-20 md:py-32 overflow-hidden">
 			{/* Background accent */}
 			<div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#171717] to-transparent" />
 
-			<div className="max-w-7xl mx-auto px-6">
+			<div className="max-w-7xl mx-auto px-4 sm:px-6">
 				{/* Section Header */}
-				<div className="features-heading text-center max-w-3xl mx-auto mb-20">
+				<div className="features-heading text-center max-w-3xl mx-auto mb-12 md:mb-20">
 					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">
 						Why It Slaps
 					</span>
@@ -140,13 +140,13 @@ export function FeaturesSection() {
 				{/* Feature Cards */}
 				<div
 					ref={cardsRef}
-					className="grid md:grid-cols-3 gap-6 lg:gap-8"
+					className="grid md:grid-cols-3 gap-4 md:gap-6 lg:gap-8"
 				>
 					{features.map((feature, index) => (
 						<Card
 							key={index}
 							variant="interactive"
-							className="p-8 group"
+							className="p-5 sm:p-6 md:p-8 group"
 						>
 							{/* Icon */}
 							<div className="w-14 h-14 rounded-2xl bg-[#22c55e]/10 border border-[#22c55e]/20 flex items-center justify-center text-[#22c55e] mb-6 group-hover:bg-[#22c55e]/20 group-hover:scale-110 transition-all duration-300">

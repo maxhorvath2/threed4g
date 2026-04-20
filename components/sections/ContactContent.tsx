@@ -183,14 +183,14 @@ export function ContactContent() {
 	};
 
 	return (
-		<section ref={sectionRef} className="pt-32 pb-20 relative">
+		<section ref={sectionRef} className="pt-24 sm:pt-32 pb-16 sm:pb-20 relative">
 			{/* Background elements */}
 			<div className="absolute top-1/4 left-0 w-100 h-100 rounded-full bg-[#22c55e]/5 blur-[150px] pointer-events-none" />
 			<div className="absolute bottom-1/4 right-0 w-75 h-75 rounded-full bg-[#22c55e]/5 blur-[120px] pointer-events-none" />
 
-			<div className="max-w-5xl mx-auto px-6">
+			<div className="max-w-5xl mx-auto px-4 sm:px-6">
 				{/* Header */}
-				<div className="contact-header text-center mb-20">
+				<div className="contact-header text-center mb-12 md:mb-20">
 					<span className="inline-block text-[#22c55e] text-sm font-medium tracking-wider uppercase mb-4">
 						Get in Touch
 					</span>
