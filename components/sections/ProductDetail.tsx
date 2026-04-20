@@ -102,7 +102,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 			<div className="max-w-7xl mx-auto">
 				{/* Back button */}
 				<FadeIn delay={0} duration={0.6}>
-					<Link href="/products">
+					<Link href="/products" className="-ml-4">
 						<Button
 							variant="ghost"
 							size="sm"
