@@ -848,6 +848,7 @@ export default function AdminDashboard() {
 																	"Preview"
 																}
 																fill
+																sizes="96px"
 																className="object-cover"
 															/>
 														</div>
@@ -1028,6 +1029,7 @@ export default function AdminDashboard() {
 											}
 											alt={product.name}
 											fill
+											sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
 											className="object-cover"
 										/>
 										{product.images &&

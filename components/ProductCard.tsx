@@ -16,6 +16,7 @@ interface ProductCardProps {
 export default function ProductCard({
 	product,
 	variant = "default",
+	index = 0,
 }: ProductCardProps) {
 	const cardRef = useRef<HTMLDivElement>(null);
 	const imageRef = useRef<HTMLDivElement>(null);
@@ -117,8 +118,9 @@ export default function ProductCard({
 						src={imageUrl}
 						alt={product.name}
 						fill
-						className={`object-cover transition-transform duration-500 ${isHovered ? "scale-110" : "scale-100"}`}
 						sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+						priority={index === 0}
+						className={`object-cover transition-transform duration-500 ${isHovered ? "scale-110" : "scale-100"}`}
 					/>
 
 					{/* Overlay gradient */}
