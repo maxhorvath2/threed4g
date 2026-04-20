@@ -66,6 +66,7 @@ export default function AdminDashboard() {
 	const [productVariants, setProductVariants] = useState<VariantFormItem[]>(
 		[],
 	);
+	const [removedVariantIds, setRemovedVariantIds] = useState<number[]>([]);
 
 	// Admin form state
 	const [adminUsername, setAdminUsername] = useState("");
@@ -197,6 +198,10 @@ export default function AdminDashboard() {
 	};
 
 	const removeVariant = (index: number) => {
+		const variant = productVariants[index];
+		if (variant.id) {
+			setRemovedVariantIds((prev) => [...prev, variant.id as number]);
+		}
 		setProductVariants(productVariants.filter((_, i) => i !== index));
 	};
 
@@ -257,8 +262,9 @@ export default function AdminDashboard() {
 			const method = editingProduct?.id ? "PUT" : "POST";
 
 			// Prepare images for API
-			const images: CreateProductImageInput[] = validImages.map(
+			const images = validImages.map(
 				(img, index) => ({
+					id: img.id,
 					image_url: img.image_url,
 					alt_text: img.alt_text || undefined,
 					is_primary: img.is_primary,
@@ -267,8 +273,9 @@ export default function AdminDashboard() {
 			);
 
 			// Prepare variants for API
-			const variants: CreateProductVariantInput[] = validVariants.map(
+			const variants = validVariants.map(
 				(v, index) => ({
+					id: v.id,
 					name: v.name,
 					price: parseFloat(v.price),
 					sku: v.sku || undefined,
@@ -287,6 +294,7 @@ export default function AdminDashboard() {
 					featured: productFeatured,
 					images,
 					variants,
+					removedVariantIds,
 				}),
 			});
 
@@ -391,6 +399,7 @@ export default function AdminDashboard() {
 			}),
 		);
 		setProductVariants(variants.length > 0 ? variants : []);
+		setRemovedVariantIds([]);
 
 		setShowProductForm(true);
 	};
@@ -403,6 +412,7 @@ export default function AdminDashboard() {
 		setProductFeatured(false);
 		setProductImages([]);
 		setProductVariants([]);
+		setRemovedVariantIds([]);
 		setUploadError(null);
 		setShowProductForm(false);
 	};

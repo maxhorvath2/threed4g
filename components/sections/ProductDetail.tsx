@@ -312,7 +312,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 									<h2 className="text-sm font-semibold text-[#a3a3a3] uppercase tracking-wider mb-3">
 										Description
 									</h2>
-									<p className="text-[#a3a3a3] leading-relaxed text-base sm:text-lg">
+									<p className="text-[#a3a3a3] leading-relaxed text-base sm:text-lg whitespace-pre-wrap">
 										{product.description}
 									</p>
 								</div>

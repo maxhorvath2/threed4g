@@ -147,7 +147,7 @@ export async function PUT(
 		const hasNewFormat = "images" in body || "variants" in body;
 
 		if (hasNewFormat) {
-			const { name, description, category, featured, images, variants } =
+			const { name, description, category, featured, images, variants, removedVariantIds } =
 				body;
 
 			// Update main product fields
@@ -174,10 +174,10 @@ export async function PUT(
         UPDATE products
         SET
           name = COALESCE(${name}, name),
-          description = COALESCE(${description}, description),
+          description = ${description ?? null},
           image_url = COALESCE(${imageUrl}, image_url),
-          category = COALESCE(${category}, category),
-          featured = COALESCE(${featured}, featured),
+          category = ${category ?? null},
+          featured = ${featured ?? false},
           price = COALESCE(${price}, price),
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
@@ -193,13 +193,11 @@ export async function PUT(
 
 			const product = result[0] as Product;
 
-			// Handle images update if provided
+			// Handle images update if provided (images have no FK constraints — safe to delete+reinsert)
 			if (images !== undefined) {
-				// Delete existing images and insert new ones
 				await sql`DELETE FROM product_images WHERE product_id = ${id}`;
-
 				for (let i = 0; i < images.length; i++) {
-					const img = images[i] as CreateProductImageInput;
+					const img = images[i] as CreateProductImageInput & { id?: number };
 					await sql`
             INSERT INTO product_images (product_id, image_url, alt_text, sort_order, is_primary)
             VALUES (${product.id}, ${img.image_url}, ${img.alt_text || null}, ${img.sort_order ?? i}, ${img.is_primary ?? i === 0})
@@ -209,18 +207,37 @@ export async function PUT(
 
 			// Handle variants update if provided
 			if (variants !== undefined) {
-				// Delete existing variants and insert new ones
-				await sql`DELETE FROM product_variants WHERE product_id = ${id}`;
-
+				// Update existing variants by id, insert new ones
 				for (let i = 0; i < variants.length; i++) {
-					const variant = variants[i] as CreateProductVariantInput;
-					const stockQuantity = normalizeStockQuantity(
-						variant.stock_quantity,
-					);
-					await sql`
-            INSERT INTO product_variants (product_id, name, sku, price, sort_order, stock_quantity, in_stock)
-            VALUES (${product.id}, ${variant.name}, ${variant.sku || null}, ${variant.price}, ${variant.sort_order ?? i}, ${stockQuantity}, ${stockQuantity > 0})
-          `;
+					const variant = variants[i] as CreateProductVariantInput & { id?: number };
+					const stockQuantity = normalizeStockQuantity(variant.stock_quantity);
+					if (variant.id) {
+						await sql`
+              UPDATE product_variants
+              SET name = ${variant.name}, sku = ${variant.sku || null}, price = ${variant.price},
+                  sort_order = ${variant.sort_order ?? i}, stock_quantity = ${stockQuantity}, in_stock = ${stockQuantity > 0}
+              WHERE id = ${variant.id} AND product_id = ${product.id}
+            `;
+					} else {
+						await sql`
+              INSERT INTO product_variants (product_id, name, sku, price, sort_order, stock_quantity, in_stock)
+              VALUES (${product.id}, ${variant.name}, ${variant.sku || null}, ${variant.price}, ${variant.sort_order ?? i}, ${stockQuantity}, ${stockQuantity > 0})
+            `;
+					}
+				}
+			}
+
+			// Delete variants explicitly removed by the admin
+			if (Array.isArray(removedVariantIds) && removedVariantIds.length > 0) {
+				for (const variantId of removedVariantIds as number[]) {
+					try {
+						await sql`
+              DELETE FROM product_variants
+              WHERE id = ${variantId} AND product_id = ${product.id}
+            `;
+					} catch {
+						// Variant is referenced by an order — skip deletion, keep it in DB
+					}
 				}
 			}
 

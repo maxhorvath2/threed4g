@@ -162,26 +162,6 @@ function renderCustomerConfirmationHtml(params: {
 
 async function ensureOrderTables() {
 	await sql`
-		ALTER TABLE orders
-		ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) NOT NULL DEFAULT 'stripe'
-	`;
-
-	await sql`
-		ALTER TABLE orders
-		ADD COLUMN IF NOT EXISTS tariff_amount DECIMAL(10, 2) NOT NULL DEFAULT 0
-	`;
-
-	await sql`
-		ALTER TABLE orders
-		ADD COLUMN IF NOT EXISTS paypal_order_id VARCHAR(255)
-	`;
-
-	await sql`
-		ALTER TABLE orders
-		ADD COLUMN IF NOT EXISTS paypal_capture_id VARCHAR(255) UNIQUE
-	`;
-
-	await sql`
 		CREATE TABLE IF NOT EXISTS orders (
 			id SERIAL PRIMARY KEY,
 			customer_name VARCHAR(255) NOT NULL,
@@ -223,18 +203,15 @@ async function ensureOrderTables() {
 			created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 		)
 	`;
+
+	await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) NOT NULL DEFAULT 'stripe'`;
+	await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS tariff_amount DECIMAL(10, 2) NOT NULL DEFAULT 0`;
+	await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS paypal_order_id VARCHAR(255)`;
+	await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS paypal_capture_id VARCHAR(255) UNIQUE`;
 }
 
 export async function POST(request: NextRequest) {
 	try {
-		if (!process.env.STRIPE_SECRET_KEY) {
-			return NextResponse.json(
-				{ error: "Stripe is not configured" },
-				{ status: 500 },
-			);
-		}
-
-		const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 		const body = (await request.json()) as Record<string, unknown>;
 		const paymentMethod = String(body.paymentMethod ?? "stripe")
 			.trim()
@@ -726,6 +703,13 @@ export async function POST(request: NextRequest) {
 		}
 
 		if (paymentMethod === "stripe") {
+			if (!process.env.STRIPE_SECRET_KEY) {
+				return NextResponse.json(
+					{ error: "Stripe is not configured" },
+					{ status: 500 },
+				);
+			}
+			const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 			const paymentIntent =
 				await stripe.paymentIntents.retrieve(paymentIntentId);
 			if (paymentIntent.status !== "succeeded") {
