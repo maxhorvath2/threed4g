@@ -170,7 +170,7 @@ export function HeroSection() {
 							<MagneticButton strength={0.15}>
 								<Button asChild size="lg">
 									<Link href="/product/11">
-										Shop The Drop
+										Grab Yours
 										<svg
 											className="w-5 h-5"
 											fill="none"

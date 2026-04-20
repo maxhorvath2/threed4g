@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type {
@@ -53,6 +53,8 @@ export default function AdminDashboard() {
 	const [uploading, setUploading] = useState(false);
 	const [uploadError, setUploadError] = useState<string | null>(null);
 
+	const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
 	// Product form state
 	const [productName, setProductName] = useState("");
 	const [productDescription, setProductDescription] = useState("");
@@ -85,6 +87,13 @@ export default function AdminDashboard() {
 	useEffect(() => {
 		fetchData();
 	}, []);
+
+	useEffect(() => {
+		if (descriptionRef.current) {
+			descriptionRef.current.style.height = "auto";
+			descriptionRef.current.style.height = `${descriptionRef.current.scrollHeight}px`;
+		}
+	}, [productDescription]);
 
 	const fetchData = async () => {
 		try {
@@ -646,13 +655,13 @@ export default function AdminDashboard() {
 											Description
 										</label>
 										<textarea
+											ref={descriptionRef}
 											value={productDescription}
 											onChange={(e) =>
-												setProductDescription(
-													e.target.value,
-												)
+												setProductDescription(e.target.value)
 											}
 											rows={3}
+											style={{ overflow: "hidden", resize: "none" }}
 											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
 										/>
 									</div>
