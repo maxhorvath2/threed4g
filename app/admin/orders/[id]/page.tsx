@@ -192,10 +192,8 @@ export default function OrderDetailPage() {
 												Subtotal
 											</p>
 											<p>
-												$
-												{Number(order.subtotal).toFixed(
-													2,
-												)}
+												${Number(order.subtotal).toFixed(2)}{" "}
+												{order.currency.toUpperCase()}
 											</p>
 										</div>
 										<div>
@@ -203,10 +201,8 @@ export default function OrderDetailPage() {
 												Shipping
 											</p>
 											<p>
-												$
-												{Number(
-													order.shipping_amount ?? 0,
-												).toFixed(2)}
+												${Number(order.shipping_amount ?? 0).toFixed(2)}{" "}
+												{order.currency.toUpperCase()}
 											</p>
 										</div>
 										<div>
@@ -241,17 +237,13 @@ export default function OrderDetailPage() {
 													</p>
 													<p className="text-xs text-[#737373] mt-1">
 														Qty {item.quantity} · $
-														{Number(
-															item.unit_price,
-														).toFixed(2)}{" "}
-														each
+														{Number(item.unit_price).toFixed(2)}{" "}
+														{order.currency.toUpperCase()} each
 													</p>
 												</div>
 												<p className="text-[#d4d4d4]">
-													$
-													{Number(
-														item.line_total,
-													).toFixed(2)}
+													${Number(item.line_total).toFixed(2)}{" "}
+													{order.currency.toUpperCase()}
 												</p>
 											</div>
 										))}

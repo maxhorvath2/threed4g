@@ -6,6 +6,7 @@ import Link from "next/link";
 import { gsap } from "gsap";
 import { usePostHog } from "@posthog/next";
 import { useCartStore } from "@/lib/store/cart";
+import { useCurrency } from "@/components/CurrencyProvider";
 import { Button } from "@/components/ui/Button";
 
 // useSyncExternalStore pattern for hydration-safe mounting detection
@@ -32,6 +33,7 @@ export function CartDrawer() {
 		getSnapshot,
 		getServerSnapshot,
 	);
+	const { formatPrice, currency } = useCurrency();
 
 	useEffect(() => {
 		if (!mounted || !drawerRef.current || !overlayRef.current) return;
@@ -201,7 +203,7 @@ export function CartDrawer() {
 											</p>
 										)}
 										<p className="text-[#22c55e] font-semibold mt-1">
-											${Number(item.price).toFixed(2)}
+											{formatPrice(Number(item.price))}
 										</p>
 
 										<div className="flex items-center gap-2 mt-3">
@@ -277,7 +279,12 @@ export function CartDrawer() {
 							<div className="flex justify-between items-center">
 								<span className="text-[#a3a3a3]">Subtotal</span>
 								<span className="text-2xl font-display font-bold text-[#22c55e]">
-									${total.toFixed(2)}
+									{formatPrice(total)}
+									{currency !== "AUD" && (
+										<span className="block text-xs font-normal text-[#737373] text-right mt-0.5">
+											Charged in AUD at checkout
+										</span>
+									)}
 								</span>
 							</div>
 

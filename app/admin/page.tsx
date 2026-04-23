@@ -509,7 +509,7 @@ export default function AdminDashboard() {
 	const getPriceDisplay = (product: ProductWithDetails) => {
 		if (!product.variants || product.variants.length === 0) {
 			return product.price !== null
-				? `$${Number(product.price).toFixed(2)}`
+				? `$${Number(product.price).toFixed(2)} AUD`
 				: null;
 		}
 
@@ -518,9 +518,9 @@ export default function AdminDashboard() {
 		const maxPrice = Math.max(...prices);
 
 		if (minPrice === maxPrice) {
-			return `$${minPrice.toFixed(2)}`;
+			return `$${minPrice.toFixed(2)} AUD`;
 		}
-		return `From $${minPrice.toFixed(2)}`;
+		return `From $${minPrice.toFixed(2)} AUD`;
 	};
 
 	const getTotalStock = (product: ProductWithDetails) => {
@@ -1556,7 +1556,8 @@ export default function AdminDashboard() {
 														$
 														{Number(
 															item.line_total,
-														).toFixed(2)}
+														).toFixed(2)}{" "}
+														{order.currency.toUpperCase()}
 													</span>
 												</div>
 											))}

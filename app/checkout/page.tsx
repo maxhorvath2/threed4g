@@ -12,6 +12,7 @@ import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
 import Navigation from "@/components/Navigation";
 import { Footer } from "@/components/layout/Footer";
 import { useCartStore } from "@/lib/store/cart";
+import { useCurrency } from "@/components/CurrencyProvider";
 import type { PaymentMethod } from "@/lib/checkout";
 
 const stripePublishableKey =
@@ -570,6 +571,7 @@ function PayPalCheckoutForm({
 
 export default function CheckoutPage() {
 	const { items, clearCart } = useCartStore();
+	const { currency: displayCurrency, formatPrice } = useCurrency();
 	const [hasMounted, setHasMounted] = useState(false);
 	const [customerName, setCustomerName] = useState("");
 	const [customerEmail, setCustomerEmail] = useState("");
@@ -1701,6 +1703,12 @@ export default function CheckoutPage() {
 									</div>
 								</div>
 
+								{displayCurrency !== "AUD" && (
+									<div className="mb-3 px-3 py-2 rounded-lg bg-[#22c55e]/5 border border-[#22c55e]/15 text-xs text-[#737373]">
+										Prices shown in {displayCurrency}. You will be charged in AUD.
+									</div>
+								)}
+
 								<div className="border-t border-[#1f1f1f] pt-4 space-y-2 text-sm text-[#a3a3a3]">
 									<div className="flex items-center justify-between">
 										<span>
@@ -1709,10 +1717,9 @@ export default function CheckoutPage() {
 												: "0 item(s)"}
 										</span>
 										<span>
-											$
 											{hasMounted
-												? cartSubtotal.toFixed(2)
-												: "0.00"}
+												? formatPrice(cartSubtotal)
+												: "—"}
 										</span>
 									</div>
 									<button
@@ -1812,10 +1819,7 @@ export default function CheckoutPage() {
 																	}
 																</p>
 																<p className="text-[#d4d4d4]">
-																	$
-																	{option.amount.toFixed(
-																		2,
-																	)}
+																	{formatPrice(option.amount)}
 																</p>
 															</div>
 															<p className="text-sm text-[#737373]">
@@ -1964,39 +1968,25 @@ export default function CheckoutPage() {
 										<div className="rounded-xl border border-[#171717] bg-[#0a0a0a] p-4 space-y-2 text-sm text-[#a3a3a3]">
 											<div className="flex items-center justify-between">
 												<span>Subtotal</span>
-												<span>
-													${subtotal.toFixed(2)}{" "}
-													{currency.toUpperCase()}
-												</span>
+												<span>{formatPrice(subtotal)}</span>
 											</div>
 											<div className="flex items-center justify-between">
 												<span>Shipping</span>
 												<span>
 													{selectedShippingOption?.label ??
 														shippingOptionLabel}{" "}
-													· $
-													{shippingAmount.toFixed(2)}{" "}
-													{currency.toUpperCase()}
+													· {formatPrice(shippingAmount)}
 												</span>
 											</div>
 											{tariffAmount > 0 && (
 												<div className="flex items-center justify-between">
 													<span>US tariff</span>
-													<span>
-														$
-														{tariffAmount.toFixed(
-															2,
-														)}{" "}
-														{currency.toUpperCase()}
-													</span>
+													<span>{formatPrice(tariffAmount)}</span>
 												</div>
 											)}
 											<div className="flex items-center justify-between text-[#fafafa] font-semibold border-t border-[#1f1f1f] pt-2 mt-2">
 												<span>Total</span>
-												<span>
-													${totalAmount.toFixed(2)}{" "}
-													{currency.toUpperCase()}
-												</span>
+												<span>{formatPrice(totalAmount)}</span>
 											</div>
 										</div>
 
@@ -2088,39 +2078,25 @@ export default function CheckoutPage() {
 										<div className="rounded-xl border border-[#171717] bg-[#0a0a0a] p-4 space-y-2 text-sm text-[#a3a3a3]">
 											<div className="flex items-center justify-between">
 												<span>Subtotal</span>
-												<span>
-													${subtotal.toFixed(2)}{" "}
-													{currency.toUpperCase()}
-												</span>
+												<span>{formatPrice(subtotal)}</span>
 											</div>
 											<div className="flex items-center justify-between">
 												<span>Shipping</span>
 												<span>
 													{selectedShippingOption?.label ??
 														shippingOptionLabel}{" "}
-													· $
-													{shippingAmount.toFixed(2)}{" "}
-													{currency.toUpperCase()}
+													· {formatPrice(shippingAmount)}
 												</span>
 											</div>
 											{tariffAmount > 0 && (
 												<div className="flex items-center justify-between">
 													<span>US tariff</span>
-													<span>
-														$
-														{tariffAmount.toFixed(
-															2,
-														)}{" "}
-														{currency.toUpperCase()}
-													</span>
+													<span>{formatPrice(tariffAmount)}</span>
 												</div>
 											)}
 											<div className="flex items-center justify-between text-[#fafafa] font-semibold border-t border-[#1f1f1f] pt-2 mt-2">
 												<span>Total</span>
-												<span>
-													${totalAmount.toFixed(2)}{" "}
-													{currency.toUpperCase()}
-												</span>
+												<span>{formatPrice(totalAmount)}</span>
 											</div>
 										</div>
 										<PayPalCheckoutForm

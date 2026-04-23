@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { Badge } from "@/components/ui/Badge";
+import { useCurrency } from "@/components/CurrencyProvider";
 import type { ProductWithDetails } from "@/lib/types/product";
 
 interface ProductCardProps {
@@ -21,6 +22,7 @@ export default function ProductCard({
 	const cardRef = useRef<HTMLDivElement>(null);
 	const imageRef = useRef<HTMLDivElement>(null);
 	const [isHovered, setIsHovered] = useState(false);
+	const { formatPrice } = useCurrency();
 
 	const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
 		if (!cardRef.current) return;
@@ -74,12 +76,12 @@ export default function ProductCard({
 			const maxPrice = Math.max(...prices);
 
 			if (minPrice === maxPrice) {
-				return `$${minPrice.toFixed(2)}`;
+				return formatPrice(minPrice);
 			}
-			return `From $${minPrice.toFixed(2)}`;
+			return `From ${formatPrice(minPrice)}`;
 		}
 		return product.price !== null && product.price !== undefined
-			? `$${Number(product.price).toFixed(2)}`
+			? formatPrice(Number(product.price))
 			: null;
 	};
 

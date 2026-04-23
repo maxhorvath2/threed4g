@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CartButton } from "@/components/cart/CartButton";
 import { MagneticButton } from "@/components/animations/MagneticButton";
+import { CurrencySelector } from "@/components/CurrencySelector";
 
 export default function Navigation() {
 	const [scrolled, setScrolled] = useState(false);
@@ -76,8 +77,9 @@ export default function Navigation() {
 						})}
 					</div>
 
-					{/* Right side - Cart */}
-					<div className="flex items-center gap-4">
+					{/* Right side - Currency + Cart */}
+					<div className="flex items-center gap-3">
+						<CurrencySelector className="hidden sm:block" />
 						<CartButton />
 
 						{/* Mobile Menu Button */}

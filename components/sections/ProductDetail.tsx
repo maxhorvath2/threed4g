@@ -8,6 +8,7 @@ import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { FadeIn } from "@/components/animations/FadeIn";
+import { useCurrency } from "@/components/CurrencyProvider";
 import type { ProductWithDetails, ProductVariant } from "@/lib/types/product";
 
 interface ProductDetailProps {
@@ -64,6 +65,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 		setIsHovered(true);
 	};
 
+	const { formatPrice } = useCurrency();
 	const currentImage = product.images[selectedImageIndex];
 	const hasMultipleImages = product.images.length > 1;
 	const hasMultipleVariants = product.variants.length > 1;
@@ -71,18 +73,18 @@ export function ProductDetail({ product }: ProductDetailProps) {
 	// Get display price based on selection
 	const getDisplayPrice = () => {
 		if (selectedVariant) {
-			return Number(selectedVariant.price).toFixed(2);
+			return formatPrice(Number(selectedVariant.price));
 		}
 		if (product.variants.length > 0) {
 			const prices = product.variants.map((v) => Number(v.price));
 			const minPrice = Math.min(...prices);
 			const maxPrice = Math.max(...prices);
 			if (minPrice === maxPrice) {
-				return minPrice.toFixed(2);
+				return formatPrice(minPrice);
 			}
-			return `${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
+			return `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`;
 		}
-		return product.price !== null ? Number(product.price).toFixed(2) : null;
+		return product.price !== null ? formatPrice(Number(product.price)) : null;
 	};
 
 	const displayPrice = getDisplayPrice();
@@ -259,7 +261,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 							<div className="mb-6">
 								{hasPrice ? (
 									<span className="text-2xl sm:text-3xl font-bold text-[#22c55e]">
-										${displayPrice}
+										{displayPrice}
 									</span>
 								) : (
 									<span className="text-xl text-[#737373]">
@@ -302,7 +304,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 														variant.stock_quantity ??
 															0,
 													) > 0
-														? `$${Number(variant.price).toFixed(2)}`
+														? formatPrice(Number(variant.price))
 														: "Sold Out"}
 												</div>
 											</button>

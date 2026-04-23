@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { gsap } from "gsap";
 import { usePostHog } from "@posthog/next";
 import { useCartStore } from "@/lib/store/cart";
+import { useCurrency } from "@/components/CurrencyProvider";
 import { Button, ButtonProps } from "@/components/ui/Button";
 
 interface AddToCartButtonProps extends Omit<ButtonProps, "onClick"> {
@@ -36,6 +37,7 @@ export function AddToCartButton({
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const posthog = usePostHog();
 	const addItem = useCartStore((state) => state.addItem);
+	const { formatPrice } = useCurrency();
 
 	// Use variant price if available, otherwise product price
 	const price = selectedVariant?.price ?? product.price;
@@ -111,7 +113,7 @@ export function AddToCartButton({
 						/>
 					</svg>
 					{showPrice
-						? `Add to Cart - $${Number(price).toFixed(2)}`
+						? `Add to Cart – ${formatPrice(Number(price))}`
 						: "Add to Cart"}
 				</>
 			) : (
