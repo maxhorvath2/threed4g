@@ -108,7 +108,7 @@ export async function createPayPalOrder(
 			intent: "CAPTURE",
 			purchase_units: [
 				{
-					description: input.description ?? "ThreeD4G checkout",
+					description: input.description ?? "ThreeD420 checkout",
 					amount: {
 						currency_code: currency,
 						value: input.totalAmount.toFixed(2),

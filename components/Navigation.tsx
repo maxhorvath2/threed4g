@@ -46,7 +46,7 @@ export default function Navigation() {
 							className="group flex items-center gap-2"
 						>
 							<span className="text-2xl font-display font-bold text-[#fafafa] transition-all duration-300 group-hover:text-[#22c55e]">
-								ThreeD4G
+								ThreeD420
 							</span>
 							<span className="w-2 h-2 rounded-full bg-[#22c55e] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 						</Link>

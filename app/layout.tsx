@@ -20,7 +20,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-	title: "ThreeD4G | Premium 3D Printed Grow Accessories",
+	title: "ThreeD420 | Premium 3D Printed Grow Accessories",
 	description:
 		"Precision-engineered 3D printed accessories for grow tents. Elevate your growing experience with innovative, high-quality products.",
 };

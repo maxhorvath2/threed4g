@@ -9,24 +9,33 @@ export async function POST(request: NextRequest) {
 
 		// Validate required fields
 		if (!name || !email || !subject || !message) {
-			return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+			return NextResponse.json(
+				{ error: "All fields are required" },
+				{ status: 400 },
+			);
 		}
 
 		// Validate email format
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(email)) {
-			return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+			return NextResponse.json(
+				{ error: "Invalid email address" },
+				{ status: 400 },
+			);
 		}
 
 		const toEmail = process.env.CONTACT_EMAIL;
 		if (!toEmail) {
 			console.error("CONTACT_EMAIL environment variable is not set");
-			return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+			return NextResponse.json(
+				{ error: "Server configuration error" },
+				{ status: 500 },
+			);
 		}
 
 		// Send email using Resend
 		const { error } = await resend.emails.send({
-			from: `ThreeD4G Contact Form <form@contact.threed4g.com>`,
+			from: `ThreeD420 Contact Form <form@contact.threed420.com>`,
 			to: toEmail,
 			replyTo: email,
 			subject: subject,
@@ -53,7 +62,7 @@ export async function POST(request: NextRequest) {
 						</div>
 
 						<p style="color: #737373; font-size: 12px; margin: 24px 0 0 0;">
-							This message was sent from the ThreeD4G contact form.
+							This message was sent from the ThreeD420 contact form.
 						</p>
 					</div>
 				</div>
@@ -62,12 +71,18 @@ export async function POST(request: NextRequest) {
 
 		if (error) {
 			console.error("Resend error:", error);
-			return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
+			return NextResponse.json(
+				{ error: "Failed to send email" },
+				{ status: 500 },
+			);
 		}
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
 		console.error("Contact form error:", error);
-		return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }

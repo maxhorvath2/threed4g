@@ -183,7 +183,10 @@ export function ContactContent() {
 	};
 
 	return (
-		<section ref={sectionRef} className="pt-24 sm:pt-32 pb-16 sm:pb-20 relative">
+		<section
+			ref={sectionRef}
+			className="pt-24 sm:pt-32 pb-16 sm:pb-20 relative"
+		>
 			{/* Background elements */}
 			<div className="absolute top-1/4 left-0 w-100 h-100 rounded-full bg-[#22c55e]/5 blur-[150px] pointer-events-none" />
 			<div className="absolute bottom-1/4 right-0 w-75 h-75 rounded-full bg-[#22c55e]/5 blur-[120px] pointer-events-none" />
@@ -206,14 +209,14 @@ export function ContactContent() {
 					{/* Contact options */}
 					<div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
 						<a
-							href="https://www.instagram.com/threed4g/"
+							href="https://www.instagram.com/threed420/"
 							target="_blank"
 							rel="noopener noreferrer"
 							onClick={() =>
 								posthog?.capture(
 									"contact_instagram_link_clicked",
 									{
-										url: "https://www.instagram.com/threed4g/",
+										url: "https://www.instagram.com/threed420/",
 									},
 								)
 							}
@@ -246,11 +249,11 @@ export function ContactContent() {
 						{/* About */}
 						<div>
 							<h2 className="text-2xl font-semibold text-[#fafafa] mb-4 font-display">
-								About ThreeD4G
+								About ThreeD420
 							</h2>
 							<p className="text-[#a3a3a3] leading-relaxed">
-								ThreeD4G specialises in creating high-quality 3D
-								printed accessories specifically designed for
+								ThreeD420 specialises in creating high-quality
+								3D printed accessories specifically designed for
 								grow tent environments. We understand the unique
 								challenges and requirements of indoor growing
 								setups, and our products are engineered to
@@ -476,7 +479,7 @@ export function ContactContent() {
 				{/* Bottom Note */}
 				<div className="mt-20 text-center">
 					<p className="text-[#737373] max-w-2xl mx-auto">
-						Thank you for visiting ThreeD4G. We&apos;re passionate
+						Thank you for visiting ThreeD420. We&apos;re passionate
 						about helping growers optimise their setups with quality
 						3D printed accessories.
 					</p>

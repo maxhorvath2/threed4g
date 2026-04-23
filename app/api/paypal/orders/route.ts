@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
 				quantity: item.quantity,
 				unitPrice: item.unitPrice,
 			})),
-			description: "ThreeD4G checkout",
+			description: "ThreeD420 checkout",
 		});
 
 		return NextResponse.json({
