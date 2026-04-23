@@ -15,6 +15,7 @@ const CURRENCY_LABELS: Record<SupportedCurrency, string> = {
 	NZD: "NZD $",
 };
 
+// Desktop: native <select>
 export function CurrencySelector({ className }: { className?: string }) {
 	const { currency, setCurrency, isPending } = useCurrency();
 
@@ -36,5 +37,30 @@ export function CurrencySelector({ className }: { className?: string }) {
 				</option>
 			))}
 		</select>
+	);
+}
+
+// Mobile: inline pill buttons — no native dropdown, no positioning issues
+export function CurrencySelectorInline() {
+	const { currency, setCurrency, isPending } = useCurrency();
+
+	return (
+		<div className="flex flex-wrap gap-2">
+			{SUPPORTED_CURRENCIES.map((c) => (
+				<button
+					key={c}
+					type="button"
+					disabled={isPending}
+					onClick={() => setCurrency(c)}
+					className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 ${
+						currency === c
+							? "bg-[#22c55e]/15 border border-[#22c55e]/50 text-[#22c55e]"
+							: "border border-[#262626] text-[#737373] hover:border-[#22c55e]/30 hover:text-[#a3a3a3]"
+					}`}
+				>
+					{CURRENCY_LABELS[c]}
+				</button>
+			))}
+		</div>
 	);
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CartButton } from "@/components/cart/CartButton";
 import { MagneticButton } from "@/components/animations/MagneticButton";
-import { CurrencySelector } from "@/components/CurrencySelector";
+import { CurrencySelector, CurrencySelectorInline } from "@/components/CurrencySelector";
 
 export default function Navigation() {
 	const [scrolled, setScrolled] = useState(false);
@@ -120,7 +120,7 @@ export default function Navigation() {
 				<div
 					className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
 						mobileMenuOpen
-							? "max-h-64 opacity-100"
+							? "max-h-96 opacity-100"
 							: "max-h-0 opacity-0"
 					}`}
 				>
@@ -142,6 +142,10 @@ export default function Navigation() {
 								</Link>
 							);
 						})}
+						<div className="px-4 pt-3 pb-2 border-t border-[#171717] mt-1 space-y-2">
+							<span className="text-xs text-[#737373]">Display currency</span>
+							<CurrencySelectorInline />
+						</div>
 					</div>
 				</div>
 			</div>
