@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { releaseExpiredReservations, ensureStockReservationTables } from "@/lib/stockReservation";
 import type {
 	Product,
 	ProductImage,
@@ -298,6 +299,38 @@ export async function DELETE(
 		}
 
 		const { id } = await params;
+
+		// Release expired stock reservations first (restores stock for truly expired sessions)
+		await ensureStockReservationTables();
+		await releaseExpiredReservations();
+
+		// Force-clear any stock session items referencing this product's variants.
+		// We're deleting the product so stock restoration is irrelevant — just remove the FK blockers.
+		await sql`
+			DELETE FROM checkout_stock_session_items
+			WHERE variant_id IN (
+				SELECT id FROM product_variants WHERE product_id = ${id}
+			)
+		`;
+
+		// Mark sessions that now have no items as expired
+		await sql`
+			UPDATE checkout_stock_sessions
+			SET status = 'expired', updated_at = NOW()
+			WHERE status = 'active'
+			  AND id NOT IN (
+				SELECT DISTINCT session_id FROM checkout_stock_session_items
+			  )
+		`;
+
+		// Clear checkout reservation items referencing this product (blocks variant cascade).
+		// Table may not exist if checkout migrations haven't run — ignore that error.
+		try {
+			await sql`DELETE FROM checkout_reservation_items WHERE product_id = ${id}`;
+		} catch (e: unknown) {
+			const msg = e instanceof Error ? e.message : String(e);
+			if (!msg.includes("does not exist")) throw e;
+		}
 
 		// Images and variants will be deleted automatically due to CASCADE
 		const result = await sql`
