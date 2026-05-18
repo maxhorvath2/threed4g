@@ -60,6 +60,7 @@ export default function AdminDashboard() {
 	const [productDescription, setProductDescription] = useState("");
 	const [productCategory, setProductCategory] = useState("");
 	const [productFeatured, setProductFeatured] = useState(false);
+	const [productParcelSize, setProductParcelSize] = useState("medium");
 
 	// Multiple images state
 	const [productImages, setProductImages] = useState<ImageFormItem[]>([]);
@@ -301,6 +302,7 @@ export default function AdminDashboard() {
 					description: productDescription || null,
 					category: productCategory || null,
 					featured: productFeatured,
+					parcel_size: productParcelSize,
 					images,
 					variants,
 					removedVariantIds,
@@ -385,6 +387,7 @@ export default function AdminDashboard() {
 		setProductDescription(product.description || "");
 		setProductCategory(product.category || "");
 		setProductFeatured(product.featured);
+		setProductParcelSize(product.parcel_size ?? "medium");
 
 		// Load images
 		const images: ImageFormItem[] = product.images.map(
@@ -419,6 +422,7 @@ export default function AdminDashboard() {
 		setProductDescription("");
 		setProductCategory("");
 		setProductFeatured(false);
+		setProductParcelSize("medium");
 		setProductImages([]);
 		setProductVariants([]);
 		setRemovedVariantIds([]);
@@ -701,6 +705,23 @@ export default function AdminDashboard() {
 												Featured
 											</label>
 										</div>
+									</div>
+
+									<div>
+										<label className="block text-sm font-medium text-[#fafafa] mb-2">
+											Postage Size
+										</label>
+										<select
+											value={productParcelSize}
+											onChange={(e) => setProductParcelSize(e.target.value)}
+											className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-[#262626] rounded-lg text-[#fafafa] focus:outline-none focus:border-[#22c55e] focus:ring-1 focus:ring-[#22c55e] transition-colors"
+										>
+											<option value="letter">Letter (250g, 22×11×2 cm)</option>
+											<option value="small">Small (500g, 28×20×2 cm)</option>
+											<option value="medium">Medium (3kg, 40×29×14 cm)</option>
+											<option value="large">Large (10kg, 55×45×45 cm)</option>
+											<option value="extra_large">Extra Large (22kg, 100×50×50 cm)</option>
+										</select>
 									</div>
 
 									{/* Images Section */}

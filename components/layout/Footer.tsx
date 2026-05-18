@@ -48,7 +48,7 @@ export function Footer() {
 							href="/"
 							className="inline-block text-2xl font-display font-bold text-[#fafafa] hover:text-[#22c55e] transition-colors duration-300 mb-4"
 						>
-							ThreeD420
+							ThreeD4G
 						</Link>
 						<p className="text-[#737373] text-sm leading-relaxed max-w-xs">
 							Premium 3D printed accessories designed specifically
@@ -111,7 +111,7 @@ export function Footer() {
 				<div className="mt-16 pt-8 border-t border-[#171717]">
 					<div className="flex flex-col md:flex-row justify-between items-center gap-4">
 						<p className="text-[#737373] text-sm">
-							&copy; {currentYear} ThreeD420. All rights reserved.
+							&copy; {currentYear} ThreeD4G. All rights reserved.
 						</p>
 
 						{/* Social Links */}

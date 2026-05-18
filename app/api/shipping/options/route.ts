@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAusPostShippingOptions } from "@/lib/auspost";
+import { getAusPostShippingOptions, getLargestParcelSize, PARCEL_SIZE_PRESETS } from "@/lib/auspost";
 import { adjustShippingQuote } from "@/lib/checkout";
+import { sql } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -19,9 +20,20 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		// Resolve parcel dimensions from product parcel sizes in the cart
+		let dimensions: { weightKg?: number; lengthCm?: number; widthCm?: number; heightCm?: number } = {};
+		const productIds = body.productIds;
+		if (Array.isArray(productIds) && productIds.length > 0) {
+			const rows = await sql`SELECT parcel_size FROM products WHERE id = ANY(${productIds as number[]})`;
+			const sizes = rows.map((r) => (r as { parcel_size: string | null }).parcel_size);
+			const largest = getLargestParcelSize(sizes);
+			dimensions = PARCEL_SIZE_PRESETS[largest];
+		}
+
 		const options = await getAusPostShippingOptions({
 			countryCode,
 			toPostcode: postalCode,
+			...dimensions,
 		});
 
 		const adjustedOptions = options.map((option) => ({

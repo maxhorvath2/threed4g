@@ -214,7 +214,7 @@ export async function PATCH(
 				const resend = new Resend(resendApiKey);
 				const fromEmail =
 					process.env.ORDER_FROM_EMAIL ??
-					"ThreeD420 Orders <orders@contact.threed420.com>";
+					"ThreeD4G Orders <orders@contact.threed4g.com>";
 
 				const trackingLine = order.tracking_url
 					? `<p><strong>Track your package:</strong> <a href="${order.tracking_url}">${order.tracking_url}</a></p>`
@@ -231,7 +231,7 @@ export async function PATCH(
               <p><strong>Order ID:</strong> #${order.id}</p>
               <p><strong>Tracking Number:</strong> ${order.tracking_number ?? "N/A"}</p>
               ${trackingLine}
-              <p>Thanks for shopping with ThreeD420.</p>
+              <p>Thanks for shopping with ThreeD4G.</p>
             </div>
           `,
 				});

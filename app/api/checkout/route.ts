@@ -621,10 +621,10 @@ export async function POST(request: NextRequest) {
 
 			const resendApiKey = process.env.RESEND_API_KEY;
 			const notificationEmail =
-				process.env.ORDER_NOTIFICATION_EMAIL ?? "contact@threed420.com";
+				process.env.ORDER_NOTIFICATION_EMAIL ?? "contact@threed4g.com";
 			const fromEmail =
 				process.env.ORDER_FROM_EMAIL ??
-				"ThreeD420 Orders <orders@contact.threed420.com>";
+				"ThreeD4G Orders <orders@contact.threed4g.com>";
 
 			if (resendApiKey) {
 				const resend = new Resend(resendApiKey);
@@ -940,10 +940,10 @@ export async function POST(request: NextRequest) {
 
 		const resendApiKey = process.env.RESEND_API_KEY;
 		const notificationEmail =
-			process.env.ORDER_NOTIFICATION_EMAIL ?? "contact@threed420.com";
+			process.env.ORDER_NOTIFICATION_EMAIL ?? "contact@threed4g.com";
 		const fromEmail =
 			process.env.ORDER_FROM_EMAIL ??
-			"ThreeD420 Orders <orders@contact.threed420.com>";
+			"ThreeD4G Orders <orders@contact.threed4g.com>";
 
 		if (resendApiKey) {
 			const resend = new Resend(resendApiKey);

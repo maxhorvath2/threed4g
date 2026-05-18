@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
 		// Send email using Resend
 		const { error } = await resend.emails.send({
-			from: `ThreeD420 Contact Form <form@contact.threed420.com>`,
+			from: `ThreeD4G Contact Form <form@contact.threed4g.com>`,
 			to: toEmail,
 			replyTo: email,
 			subject: subject,
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 						</div>
 
 						<p style="color: #737373; font-size: 12px; margin: 24px 0 0 0;">
-							This message was sent from the ThreeD420 contact form.
+							This message was sent from the ThreeD4G contact form.
 						</p>
 					</div>
 				</div>

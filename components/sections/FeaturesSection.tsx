@@ -63,7 +63,7 @@ const features = [
 		),
 		title: "Sealed & Solvent-Ready",
 		description:
-			"The lid locks everything down so the ISO stays where it should. High-grade PETG handles isopropyl daily without warping, clouding, or cracking.",
+			"The lid locks everything down so the ISO stays where it should. High-grade PETG handles cleaning solution daily without warping, clouding, or cracking.",
 	},
 ];
 
@@ -116,7 +116,10 @@ export function FeaturesSection() {
 	}, []);
 
 	return (
-		<section ref={sectionRef} className="relative py-20 md:py-32 overflow-hidden">
+		<section
+			ref={sectionRef}
+			className="relative py-20 md:py-32 overflow-hidden"
+		>
 			{/* Background accent */}
 			<div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#171717] to-transparent" />
 

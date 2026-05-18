@@ -249,10 +249,10 @@ export function ContactContent() {
 						{/* About */}
 						<div>
 							<h2 className="text-2xl font-semibold text-[#fafafa] mb-4 font-display">
-								About ThreeD420
+								About ThreeD4G
 							</h2>
 							<p className="text-[#a3a3a3] leading-relaxed">
-								ThreeD420 specialises in creating high-quality
+								ThreeD4G specialises in creating high-quality
 								3D printed accessories specifically designed for
 								grow tent environments. We understand the unique
 								challenges and requirements of indoor growing
@@ -479,7 +479,7 @@ export function ContactContent() {
 				{/* Bottom Note */}
 				<div className="mt-20 text-center">
 					<p className="text-[#737373] max-w-2xl mx-auto">
-						Thank you for visiting ThreeD420. We&apos;re passionate
+						Thank you for visiting ThreeD4G. We&apos;re passionate
 						about helping growers optimise their setups with quality
 						3D printed accessories.
 					</p>

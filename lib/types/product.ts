@@ -29,6 +29,7 @@ export interface Product {
 	category: string | null;
 	featured: boolean;
 	price: number | null;
+	parcel_size: string | null;
 	created_at?: string;
 	updated_at?: string;
 }

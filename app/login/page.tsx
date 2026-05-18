@@ -50,7 +50,7 @@ export default function Login() {
 			<div className="w-full max-w-md">
 				<div className="text-center mb-8">
 					<h1 className="text-3xl font-semibold mb-2 text-[#fafafa]">
-						ThreeD420
+						ThreeD4G
 					</h1>
 					<p className="text-[#a3a3a3]">Admin Login</p>
 				</div>

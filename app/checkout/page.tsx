@@ -929,6 +929,7 @@ export default function CheckoutPage() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					shipping: toShippingPayload(shipping),
+					productIds: items.map((i) => i.productId),
 				}),
 			});
 

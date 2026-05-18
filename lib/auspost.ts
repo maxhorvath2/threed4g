@@ -1,3 +1,39 @@
+export type ParcelSize = "letter" | "small" | "medium" | "large" | "extra_large";
+
+export interface ParcelDimensions {
+	weightKg: number;
+	lengthCm: number;
+	widthCm: number;
+	heightCm: number;
+}
+
+export const PARCEL_SIZE_PRESETS: Record<ParcelSize, ParcelDimensions> = {
+	letter:      { weightKg: 0.25, lengthCm: 22, widthCm: 11, heightCm: 2  },
+	small:       { weightKg: 0.5,  lengthCm: 28, widthCm: 20, heightCm: 2  },
+	medium:      { weightKg: 3,    lengthCm: 40, widthCm: 29, heightCm: 14 },
+	large:       { weightKg: 10,   lengthCm: 55, widthCm: 45, heightCm: 45 },
+	extra_large: { weightKg: 22,   lengthCm: 100, widthCm: 50, heightCm: 50 },
+};
+
+const PARCEL_SIZE_ORDER: ParcelSize[] = ["letter", "small", "medium", "large", "extra_large"];
+
+export function getLargestParcelSize(sizes: (string | null | undefined)[]): ParcelSize {
+	let maxIndex = 2; // default 'medium'
+	for (const size of sizes) {
+		const idx = PARCEL_SIZE_ORDER.indexOf(size as ParcelSize);
+		if (idx > maxIndex) maxIndex = idx;
+	}
+	return PARCEL_SIZE_ORDER[maxIndex];
+}
+
+export const PARCEL_SIZE_LABELS: Record<ParcelSize, string> = {
+	letter:      "Letter (250g, 22×11×2 cm)",
+	small:       "Small (500g, 28×20×2 cm)",
+	medium:      "Medium (3kg, 40×29×14 cm)",
+	large:       "Large (10kg, 55×45×45 cm)",
+	extra_large: "Extra Large (22kg, 100×50×50 cm)",
+};
+
 export interface LiveShippingOption {
 	id: string;
 	label: string;

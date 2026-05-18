@@ -195,8 +195,8 @@ export async function POST(request: NextRequest) {
 		}
 
 		// New format with images and variants
-		const { name, description, category, featured, images, variants } =
-			body as CreateProductInput;
+		const { name, description, category, featured, images, variants, parcel_size } =
+			body as CreateProductInput & { parcel_size?: string };
 
 		if (!name) {
 			return NextResponse.json(
@@ -226,8 +226,8 @@ export async function POST(request: NextRequest) {
 
 		// Insert product
 		const productResult = await sql`
-      INSERT INTO products (name, description, image_url, category, featured, price)
-      VALUES (${name}, ${description || null}, ${primaryImage.image_url}, ${category || null}, ${featured || false}, ${lowestPrice})
+      INSERT INTO products (name, description, image_url, category, featured, price, parcel_size)
+      VALUES (${name}, ${description || null}, ${primaryImage.image_url}, ${category || null}, ${featured || false}, ${lowestPrice}, ${parcel_size ?? "medium"})
       RETURNING *
     `;
 

@@ -150,6 +150,9 @@ CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
 -- Migration: Add price column if it doesn't exist (for existing databases)
 -- Run this manually: ALTER TABLE products ADD COLUMN IF NOT EXISTS price DECIMAL(10, 2);
 
+-- Migration: Add parcel_size column (for existing databases)
+-- Run this manually: ALTER TABLE products ADD COLUMN IF NOT EXISTS parcel_size VARCHAR(20) DEFAULT 'medium';
+
 -- Migration: Add stock quantity to variants (for existing databases)
 -- Run this manually:
 -- ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS stock_quantity INTEGER NOT NULL DEFAULT 0;

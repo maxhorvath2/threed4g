@@ -148,7 +148,7 @@ export async function PUT(
 		const hasNewFormat = "images" in body || "variants" in body;
 
 		if (hasNewFormat) {
-			const { name, description, category, featured, images, variants, removedVariantIds } =
+			const { name, description, category, featured, images, variants, removedVariantIds, parcel_size } =
 				body;
 
 			// Update main product fields
@@ -180,6 +180,7 @@ export async function PUT(
           category = ${category ?? null},
           featured = ${featured ?? false},
           price = COALESCE(${price}, price),
+          parcel_size = COALESCE(${parcel_size ?? null}, parcel_size),
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
         RETURNING *
